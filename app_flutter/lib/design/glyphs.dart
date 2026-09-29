@@ -26,6 +26,7 @@ enum CullIcon {
   bolt,
   close,
   share,
+  back,
 }
 
 class _Glyph {
@@ -58,6 +59,7 @@ const Map<CullIcon, _Glyph> _glyphs = {
   CullIcon.bolt: _Glyph(_bolt),
   CullIcon.close: _Glyph(_close),
   CullIcon.share: _Glyph(_share),
+  CullIcon.back: _Glyph(_back),
 };
 
 void _refresh(Canvas c, Paint p, double s) {
@@ -264,6 +266,16 @@ void _bolt(Canvas c, Paint p, double s) {
 void _close(Canvas c, Paint p, double s) {
   c.drawLine(Offset(s * 0.24, s * 0.24), Offset(s * 0.76, s * 0.76), p);
   c.drawLine(Offset(s * 0.76, s * 0.24), Offset(s * 0.24, s * 0.76), p);
+}
+
+void _back(Canvas c, Paint p, double s) {
+  c.drawLine(Offset(s * 0.8, s * 0.5), Offset(s * 0.2, s * 0.5), p);
+  final head = Path()
+    ..moveTo(s * 0.44, s * 0.26)
+    ..lineTo(s * 0.16, s * 0.5)
+    ..lineTo(s * 0.44, s * 0.74)
+    ..close();
+  c.drawPath(head, p);
 }
 
 void _share(Canvas c, Paint p, double s) {

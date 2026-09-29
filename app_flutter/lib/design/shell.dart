@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'controls.dart';
+import 'glyphs.dart';
 import 'tokens.g.dart';
 import 'type.dart';
 
@@ -14,14 +17,19 @@ class CullApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlay,
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: MediaQuery.withClampedTextScaling(
-          minScaleFactor: 1,
-          maxScaleFactor: 2,
-          child: ColoredBox(
-            color: CullTokens.canvas,
-            child: DefaultTextStyle(style: CullType.bodyM, child: child),
+      child: WidgetsApp(
+        color: CullTokens.canvas,
+        textStyle: CullType.bodyM,
+        title: 'CULL',
+        onGenerateRoute: (_) => CullRoute<void>(builder: (_) => child),
+        builder: (context, navigator) => ColoredBox(
+          color: CullTokens.canvas,
+          child: CullToastHost(
+            child: MediaQuery.withClampedTextScaling(
+              minScaleFactor: 1,
+              maxScaleFactor: 2,
+              child: navigator ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),
@@ -102,16 +110,25 @@ class CullPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.of(context).canPop();
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         CullTokens.spaceLg,
-        CullTokens.spaceXl,
+        CullTokens.spaceMd,
         CullTokens.spaceLg,
         CullTokens.spaceLg,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          if (canPop) ...[
+            CullIconButton(
+              icon: const CullGlyph(CullIcon.back),
+              label: 'Back',
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            const SizedBox(width: CullTokens.spaceSm),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,12 +221,14 @@ class _CullToastHostState extends State<CullToastHost>
     implements ToastController {
   ToastMessage? _current;
   int _token = 0;
+  Timer? _timer;
 
   @override
   void push(String message, {Color? tint}) {
+    _timer?.cancel();
     final token = ++_token;
     setState(() => _current = ToastMessage(message: message, tint: tint));
-    Future<void>.delayed(const Duration(milliseconds: 2600), () {
+    _timer = Timer(const Duration(milliseconds: 2600), () {
       if (!mounted || token != _token) return;
       clear();
     });
@@ -217,8 +236,18 @@ class _CullToastHostState extends State<CullToastHost>
 
   @override
   void clear() {
+    _timer?.cancel();
+    _timer = null;
     if (!mounted) return;
+    if (_current == null) return;
     setState(() => _current = null);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
   }
 
   @override
@@ -299,6 +328,7 @@ Future<bool> cullConfirm(
 }) async {
   final result = await Navigator.of(context).push<bool>(
     CullRoute(
+      modal: true,
       builder: (context) => _CullConfirm(
         title: title,
         message: message,
@@ -370,7 +400,8 @@ class _CullConfirm extends StatelessWidget {
 }
 
 Future<T?> cullSheet<T>(BuildContext context, Widget child) {
-  return Navigator.of(context).push<T>(CullRoute(builder: (_) => child));
+  return Navigator.of(context)
+      .push<T>(CullRoute(modal: true, builder: (_) => child));
 }
 
 class CullScrim extends StatelessWidget {
@@ -393,10 +424,11 @@ class CullScrim extends StatelessWidget {
 }
 
 class CullRoute<T> extends PageRouteBuilder<T> {
-  CullRoute({required WidgetBuilder builder, bool fullscreen = true})
+  CullRoute({required WidgetBuilder builder, bool modal = false})
     : super(
-        opaque: false,
-        barrierColor: const Color(0x00000000),
+        opaque: !modal,
+        barrierColor: modal ? CullTokens.scrim : const Color(0x00000000),
+        barrierDismissible: modal,
         transitionDuration: CullTokens.motionSettle,
         reverseTransitionDuration: CullTokens.motionInstant,
         pageBuilder: (context, _, _) => builder(context),

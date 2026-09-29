@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 
 import '../design/controls.dart';
 import '../design/glyphs.dart';
-import '../design/shell.dart';
 import '../design/tokens.g.dart';
 import '../design/type.dart';
 import 'copy.dart';
@@ -59,64 +58,62 @@ class _OnboardingState extends State<Onboarding> {
 
   @override
   Widget build(BuildContext context) {
-    return CullApp(
-      child: ColoredBox(
-        color: CullTokens.canvas,
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView(
-                  controller: _pages,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (i) => setState(() => _index = i),
-                  children: [
-                    for (final p in OnboardingCopy.pages)
-                      _Statement(page: p, index: _index, total: _total),
-                    _TonePage(
-                      selected: _tone,
-                      onSelect: (v) => setState(() => _tone = v),
-                    ),
-                    _FinalPage(tone: _tone),
-                  ],
-                ),
+    return ColoredBox(
+      color: CullTokens.canvas,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView(
+                controller: _pages,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (i) => setState(() => _index = i),
+                children: [
+                  for (final p in OnboardingCopy.pages)
+                    _Statement(page: p, index: _index, total: _total),
+                  _TonePage(
+                    selected: _tone,
+                    onSelect: (v) => setState(() => _tone = v),
+                  ),
+                  _FinalPage(tone: _tone),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  CullTokens.spaceLg,
-                  CullTokens.spaceMd,
-                  CullTokens.spaceLg,
-                  CullTokens.spaceLg,
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 84,
-                      child: _index == 0
-                          ? null
-                          : CullButton(
-                              label: 'Back',
-                              kind: CullButtonKind.ghost,
-                              dense: true,
-                              onPressed: _back,
-                            ),
-                    ),
-                    Expanded(
-                      child: _Progress(index: _index, total: _total),
-                    ),
-                    SizedBox(
-                      width: 84,
-                      child: CullButton(
-                        label: _isLast ? OnboardingCopy.cta : 'Next',
-                        onPressed: _next,
-                        dense: true,
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                CullTokens.spaceLg,
+                CullTokens.spaceMd,
+                CullTokens.spaceLg,
+                CullTokens.spaceLg,
               ),
-            ],
-          ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 84,
+                    child: _index == 0
+                        ? null
+                        : CullButton(
+                            label: 'Back',
+                            kind: CullButtonKind.ghost,
+                            dense: true,
+                            onPressed: _back,
+                          ),
+                  ),
+                  Expanded(
+                    child: _Progress(index: _index, total: _total),
+                  ),
+                  SizedBox(
+                    width: 96,
+                    child: CullButton(
+                      label: _isLast ? OnboardingCopy.cta : 'Next',
+                      onPressed: _next,
+                      dense: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

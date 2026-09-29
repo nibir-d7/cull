@@ -28,14 +28,7 @@ class Culling extends StatelessWidget {
   const Culling({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return CullApp(
-      child: Navigator(
-        onGenerateRoute: (settings) =>
-            CullRoute<void>(builder: (_) => const EngineGate()),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const CullApp(child: EngineGate());
 }
 
 class EngineGate extends StatefulWidget {
