@@ -34,16 +34,31 @@ link is.
 | `db/` | Store, migrations, FTS5 search, graveyard |
 | `ingest/` | Fetch, readability extraction, pipeline |
 | `design/` | Token and component schemas, validators, generators |
+| `bind/` | Engine API exposed to the UI layer |
+| `ffi/` | C ABI over `bind/`, built as a shared library |
 | `cmd/cullctl/` | Command line interface |
 | `cmd/designtool/` | Design token validator and compiler |
 | `app_flutter/` | Flutter application |
+
+## Engine interface
+
+The Go engine is reached from Dart over `dart:ffi`. `bind/` holds the API and
+`ffi/` exports it as a flat C surface that returns JSON, so no struct layout is
+shared across the language boundary.
+
+```sh
+go build -buildmode=c-shared -o build/cullffi/cull.dll ./ffi
+```
+
+`ffi/` is a `cgo` package, so it needs a C toolchain. Every other package is
+pure Go and cross-compiles freely.
 
 ## Build
 
 Requires Go 1.26+ and Flutter 3.47+.
 
 ```sh
-go build ./...
+go build ./core/... ./db/... ./ingest/... ./design/... ./bind/... ./cmd/...
 go run ./cmd/designtool compile
 go run ./cmd/designtool assets
 cd app_flutter && flutter run

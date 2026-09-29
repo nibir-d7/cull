@@ -7,8 +7,11 @@ _*
 !db/
 !ingest/
 !design/
+!bind/
+!ffi/
 !cmd/
 !app_flutter/
+!build/
 
 core/*
 !core/*.go
@@ -24,6 +27,16 @@ design/*
 !design/*.go
 !design/tokens.json
 !design/components.json
+
+bind/*
+!bind/*.go
+
+ffi/*
+!ffi/*.go
+
+build/
+!build/.gitkeep
+build/**
 
 app_flutter/.dart_tool/
 app_flutter/.flutter-plugins
