@@ -166,7 +166,7 @@ abstract final class CullTheme {
         style: FilledButton.styleFrom(
           backgroundColor: CullTokens.signal,
           foregroundColor: CullTokens.inkOnAccent,
-          minimumSize: const Size.fromHeight(CullTokens.minTouchTarget),
+          minimumSize: const Size(0, CullTokens.minTouchTarget),
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(CullTokens.radiusPill)),
           ),
@@ -180,7 +180,7 @@ abstract final class CullTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: CullTokens.inkPrimary,
-          minimumSize: const Size.fromHeight(CullTokens.minTouchTarget),
+          minimumSize: const Size(0, CullTokens.minTouchTarget),
           side: const BorderSide(color: CullTokens.inkDisabled),
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(CullTokens.radiusPill)),
@@ -194,7 +194,7 @@ abstract final class CullTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: CullTokens.inkSecondary,
-          minimumSize: const Size.fromHeight(CullTokens.minTouchTarget),
+          minimumSize: const Size(0, CullTokens.minTouchTarget),
           textStyle: _style(
             weight: CullTokens.typeBodyMWeight,
             size: CullTokens.typeBodyMSize,
@@ -205,7 +205,10 @@ abstract final class CullTheme {
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
           foregroundColor: CullTokens.inkSecondary,
-          minimumSize: const Size.fromHeight(CullTokens.minTouchTarget),
+          minimumSize: const Size(
+            CullTokens.minTouchTarget,
+            CullTokens.minTouchTarget,
+          ),
         ),
       ),
       focusColor: CullTokens.focus,
