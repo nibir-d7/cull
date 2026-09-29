@@ -9,10 +9,12 @@ import 'design/theme.dart';
 import 'design/tokens.g.dart';
 import 'engine/cull_ffi.dart';
 import 'features/detail_screen.dart';
+import 'features/add_link_sheet.dart';
 import 'features/hoard_screen.dart';
 import 'features/secondary_screens.dart';
 import 'onboarding/copy.dart';
 import 'onboarding/onboarding.dart';
+import 'platform/shared_url.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +60,7 @@ class EngineGate extends StatefulWidget {
 }
 
 class _EngineGateState extends State<EngineGate> {
+  static const SharedUrl _shared = SharedUrl.android();
   late Future<HoardRepository> _repository;
 
   @override
@@ -109,16 +112,17 @@ class _EngineGateState extends State<EngineGate> {
             ),
           );
         }
-        return HomeShell(repository: snapshot.data!);
+        return HomeShell(repository: snapshot.data!, sharedUrl: _shared);
       },
     );
   }
 }
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.repository});
+  const HomeShell({super.key, required this.repository, this.sharedUrl});
 
   final HoardRepository repository;
+  final SharedUrl? sharedUrl;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -126,6 +130,40 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
+  bool _handlingShare = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _consumeShare());
+  }
+
+  Future<void> _consumeShare() async {
+    if (_handlingShare) return;
+    final source = widget.sharedUrl;
+    if (source == null) return;
+    _handlingShare = true;
+    try {
+      final url = await source.take();
+      if (url == null || !mounted) return;
+      setState(() => _index = 0);
+      await AddLinkSheet.show(
+        context,
+        repository: widget.repository,
+        initialUrl: url,
+      );
+    } finally {
+      _handlingShare = false;
+    }
+  }
+
+  Future<void> _openAdd() async {
+    final saved = await AddLinkSheet.show(
+      context,
+      repository: widget.repository,
+    );
+    if (saved == true && mounted) setState(() {});
+  }
 
   void _open(Link link) {
     Navigator.of(context).push(
@@ -145,6 +183,15 @@ class _HomeShellState extends State<HomeShell> {
     ];
 
     return Scaffold(
+      floatingActionButton: _index == 0
+          ? FloatingActionButton.extended(
+              onPressed: _openAdd,
+              backgroundColor: CullTokens.signal,
+              foregroundColor: CullTokens.inkOnAccent,
+              icon: const Icon(Icons.add),
+              label: const Text('Save a link'),
+            )
+          : null,
       body: BlobBackground(
         child: IndexedStack(index: _index, children: pages),
       ),

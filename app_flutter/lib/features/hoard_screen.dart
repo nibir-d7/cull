@@ -82,7 +82,7 @@ class LinkCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${link.domain}  ·  ${link.ageDays}d  ·  ${link.bandLabel}',
+                  '${link.domain}  Ã‚Â·  ${link.ageDays}d  Ã‚Â·  ${link.bandLabel}',
                   style: t.textTheme.labelSmall,
                 ),
               ),
