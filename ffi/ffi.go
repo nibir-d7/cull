@@ -220,6 +220,67 @@ func CULLTone(h C.int) C.int {
 	return C.int(s.Tone())
 }
 
+//export CULLGetSetting
+func CULLGetSetting(h C.int, key *C.char, def *C.char) *C.char {
+	s := storeAt(h)
+	if s == nil || key == nil {
+		return out(map[string]any{"error": "bad store"})
+	}
+	d := ""
+	if def != nil {
+		d = C.GoString(def)
+	}
+	return out(s.GetSetting(C.GoString(key), d))
+}
+
+//export CULLSetSetting
+func CULLSetSetting(h C.int, key *C.char, value *C.char) *C.char {
+	s := storeAt(h)
+	if s == nil || key == nil || value == nil {
+		return out(map[string]any{"error": "bad store"})
+	}
+	if err := s.SetSetting(C.GoString(key), C.GoString(value)); err != nil {
+		return out(map[string]any{"error": err.Error()})
+	}
+	return out(map[string]any{"ok": true})
+}
+
+//export CULLHasOnboarded
+func CULLHasOnboarded(h C.int) C.int {
+	s := storeAt(h)
+	if s == nil {
+		return 0
+	}
+	if s.HasOnboarded() {
+		return 1
+	}
+	return 0
+}
+
+//export CULLMarkOnboarded
+func CULLMarkOnboarded(h C.int) *C.char {
+	s := storeAt(h)
+	if s == nil {
+		return out(map[string]any{"error": "bad store"})
+	}
+	if err := s.MarkOnboarded(); err != nil {
+		return out(map[string]any{"error": err.Error()})
+	}
+	return out(map[string]any{"ok": true})
+}
+
+//export CULLIsPro
+func CULLIsPro(h C.int) C.int {
+	s := storeAt(h)
+	if s == nil {
+		return 0
+	}
+	if s.IsPro() {
+		return 1
+	}
+	return 0
+}
+
 //export CULLSchemaVersion
 func CULLSchemaVersion(h C.int) C.int {
 	s := storeAt(h)

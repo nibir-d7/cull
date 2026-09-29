@@ -11,7 +11,9 @@ import 'engine/cull_ffi.dart';
 import 'features/detail_screen.dart';
 import 'features/add_link_sheet.dart';
 import 'features/hoard_screen.dart';
+import 'features/roast_screen.dart';
 import 'features/secondary_screens.dart';
+import 'features/settings_screen.dart';
 import 'onboarding/copy.dart';
 import 'onboarding/onboarding.dart';
 import 'platform/shared_url.dart';
@@ -22,16 +24,8 @@ void main() {
   runApp(const CullApp());
 }
 
-class CullApp extends StatefulWidget {
+class CullApp extends StatelessWidget {
   const CullApp({super.key});
-
-  @override
-  State<CullApp> createState() => _CullAppState();
-}
-
-class _CullAppState extends State<CullApp> {
-  RoastTone _tone = RoastTone.blunt;
-  bool _onboarded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,15 +33,7 @@ class _CullAppState extends State<CullApp> {
       title: 'CULL',
       debugShowCheckedModeBanner: false,
       theme: CullTheme.dark(),
-      home: _onboarded
-          ? const EngineGate()
-          : Onboarding(
-              initialTone: _tone,
-              onFinished: (t) => setState(() {
-                _tone = t;
-                _onboarded = true;
-              }),
-            ),
+      home: const EngineGate(),
     );
   }
 }
@@ -62,6 +48,8 @@ class EngineGate extends StatefulWidget {
 class _EngineGateState extends State<EngineGate> {
   static const SharedUrl _shared = SharedUrl.android();
   late Future<HoardRepository> _repository;
+  bool _onboarded = false;
+  int _tone = RoastTone.blunt.index;
 
   @override
   void initState() {
@@ -70,9 +58,15 @@ class _EngineGateState extends State<EngineGate> {
   }
 
   Future<HoardRepository> _open() async {
-    const name = 'cull.db';
     const dir = 'data';
-    return EngineHoardRepository.open('$dir${Platform.pathSeparator}$name');
+    final repo = await EngineHoardRepository.open(
+      '$dir${Platform.pathSeparator}cull.db',
+    );
+    if (repo.hasOnboarded) {
+      _onboarded = true;
+      _tone = await repo.tone();
+    }
+    return repo;
   }
 
   @override
@@ -112,7 +106,24 @@ class _EngineGateState extends State<EngineGate> {
             ),
           );
         }
-        return HomeShell(repository: snapshot.data!, sharedUrl: _shared);
+        return _onboarded
+            ? HomeShell(repository: snapshot.data!, sharedUrl: _shared)
+            : Onboarding(
+                initialTone: RoastTone.values.firstWhere(
+                  (t) => t.index == _tone,
+                  orElse: () => RoastTone.blunt,
+                ),
+                onFinished: (t) async {
+                  final repo = snapshot.data!;
+                  await repo.setTone(t.index);
+                  await repo.markOnboarded();
+                  if (!mounted) return;
+                  setState(() {
+                    _onboarded = true;
+                    _tone = t.index;
+                  });
+                },
+              );
       },
     );
   }
@@ -173,13 +184,26 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsScreen(repository: widget.repository),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
-      HoardScreen(repository: widget.repository, onOpen: _open),
+      HoardScreen(
+        repository: widget.repository,
+        onOpen: _open,
+        onSettings: _openSettings,
+      ),
       SearchScreen(repository: widget.repository, onOpen: _open),
       CullInboxScreen(repository: widget.repository),
       GraveyardScreen(repository: widget.repository),
+      RoastScreen(repository: widget.repository),
     ];
 
     return Scaffold(
@@ -215,11 +239,7 @@ class _HomeShellState extends State<HomeShell> {
             selectedIcon: Icon(Icons.delete_sweep),
             label: 'Cull',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.inbox_outlined),
-            selectedIcon: Icon(Icons.inbox),
-            label: 'Graveyard',
-          ),
+
         ],
       ),
     );

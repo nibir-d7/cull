@@ -3,12 +3,14 @@ import 'package:flutter/widgets.dart';
 import '../design/tokens.g.dart';
 
 enum RoastTone {
-  soft(CullTokens.success),
-  blunt(CullTokens.signal),
-  savage(CullTokens.danger);
+  soft(CullTokens.success, 'Soft'),
+  blunt(CullTokens.signal, 'Blunt'),
+  savage(CullTokens.danger, 'Savage');
 
-  const RoastTone(this.accent);
+  const RoastTone(this.accent, this.label);
+
   final Color accent;
+  final String label;
 
   String get id => name;
 

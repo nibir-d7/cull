@@ -222,6 +222,15 @@ typedef _ToneGetDart = int Function(int);
 typedef _SchemaNative = Int32 Function(Int32);
 typedef _SchemaDart = int Function(int);
 
+typedef _FlagNative = Int32 Function(Int32);
+typedef _FlagDart = int Function(int);
+
+typedef _SettingNative = Pointer<Char> Function(Int32, Pointer<Char>, Pointer<Char>);
+typedef _SettingDart = Pointer<Char> Function(int, Pointer<Char>, Pointer<Char>);
+
+typedef _PairNative = Pointer<Char> Function(Int32, Pointer<Char>, Pointer<Char>);
+typedef _PairDart = Pointer<Char> Function(int, Pointer<Char>, Pointer<Char>);
+
 typedef _FreeNative = Void Function(Pointer<Char>);
 typedef _FreeDart = void Function(Pointer<Char>);
 
@@ -286,6 +295,46 @@ class Cull {
 
   int get schemaVersion =>
       _lib.lookupFunction<_SchemaNative, _SchemaDart>('CULLSchemaVersion')(_handle);
+
+  bool get hasOnboarded =>
+      _lib.lookupFunction<_FlagNative, _FlagDart>('CULLHasOnboarded')(_handle) == 1;
+
+  void markOnboarded() {
+    final fn = _lib.lookupFunction<_StatsNative, _StatsDart>('CULLMarkOnboarded');
+    _discard(fn(_handle));
+  }
+
+  bool get isPro =>
+      _lib.lookupFunction<_FlagNative, _FlagDart>('CULLIsPro')(_handle) == 1;
+
+  String getSetting(String key, {String fallback = ''}) {
+    final fn =
+        _lib.lookupFunction<_SettingNative, _SettingDart>('CULLGetSetting');
+    final k = key.toNativeUtf8();
+    final d = fallback.toNativeUtf8();
+    try {
+      return _decode(() => fn(_handle, k.cast<Char>(), d.cast<Char>()), (o) {
+        final s = o as String;
+        return s.isEmpty ? fallback : s;
+      });
+    } finally {
+      calloc.free(k);
+      calloc.free(d);
+    }
+  }
+
+  void setSetting(String key, String value) {
+    final fn =
+        _lib.lookupFunction<_PairNative, _PairDart>('CULLSetSetting');
+    final k = key.toNativeUtf8();
+    final v = value.toNativeUtf8();
+    try {
+      _discard(fn(_handle, k.cast<Char>(), v.cast<Char>()));
+    } finally {
+      calloc.free(k);
+      calloc.free(v);
+    }
+  }
 
   int get tone =>
       _lib.lookupFunction<_ToneGetNative, _ToneGetDart>('CULLTone')(_handle);

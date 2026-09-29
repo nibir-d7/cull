@@ -25,6 +25,18 @@ abstract class HoardRepository {
 
   Future<void> setTone(int tone);
 
+  bool get hasOnboarded;
+
+  Future<void> markOnboarded();
+
+  bool get isPro;
+
+  String getSetting(String key, {String fallback});
+
+  Future<void> setSetting(String key, String value);
+
+  int get schemaVersionSync;
+
   void close();
 }
 
@@ -92,6 +104,26 @@ class EngineHoardRepository implements HoardRepository {
 
   @override
   Future<void> setTone(int tone) async => _engine.setTone(tone);
+
+  @override
+  bool get hasOnboarded => _engine.hasOnboarded;
+
+  @override
+  Future<void> markOnboarded() async => _engine.markOnboarded();
+
+  @override
+  bool get isPro => _engine.isPro;
+
+  @override
+  String getSetting(String key, {String fallback = ''}) =>
+      _engine.getSetting(key, fallback: fallback);
+
+  @override
+  Future<void> setSetting(String key, String value) async =>
+      _engine.setSetting(key, value);
+
+  @override
+  int get schemaVersionSync => _engine.schemaVersion;
 
   @override
   void close() => _engine.close();

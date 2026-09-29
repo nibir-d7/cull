@@ -267,6 +267,26 @@ func (s *Store) SetTone(tone int) error {
 	return s.inner.SetSetting(db.SettingTone, name)
 }
 
+func (s *Store) GetSetting(key, def string) string {
+	return s.inner.Setting(key, def)
+}
+
+func (s *Store) SetSetting(key, value string) error {
+	return s.inner.SetSetting(key, value)
+}
+
+func (s *Store) HasOnboarded() bool {
+	return s.inner.Setting(db.SettingOnboarded, "") == "1"
+}
+
+func (s *Store) MarkOnboarded() error {
+	return s.inner.SetSetting(db.SettingOnboarded, "1")
+}
+
+func (s *Store) IsPro() bool {
+	return s.inner.Setting(db.SettingPro, "") == "1"
+}
+
 func (s *Store) Tone() int {
 	return int(s.inner.Tone())
 }

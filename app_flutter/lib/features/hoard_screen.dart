@@ -82,7 +82,7 @@ class LinkCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${link.domain}  Ã‚Â·  ${link.ageDays}d  Ã‚Â·  ${link.bandLabel}',
+                  '${link.domain}  ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  ${link.ageDays}d  ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  ${link.bandLabel}',
                   style: t.textTheme.labelSmall,
                 ),
               ),
@@ -100,10 +100,16 @@ class LinkCard extends StatelessWidget {
 }
 
 class HoardScreen extends StatefulWidget {
-  const HoardScreen({super.key, required this.repository, required this.onOpen});
+  const HoardScreen({
+    super.key,
+    required this.repository,
+    required this.onOpen,
+    this.onSettings,
+  });
 
   final HoardRepository repository;
   final void Function(Link link) onOpen;
+  final VoidCallback? onSettings;
 
   @override
   State<HoardScreen> createState() => _HoardScreenState();
@@ -131,6 +137,12 @@ class _HoardScreenState extends State<HoardScreen> {
       appBar: AppBar(
         title: const Text('Your hoard'),
         actions: [
+          if (widget.onSettings != null)
+            IconButton(
+              onPressed: widget.onSettings,
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'Settings',
+            ),
           IconButton(
             onPressed: _reload,
             icon: const Icon(Icons.refresh),
