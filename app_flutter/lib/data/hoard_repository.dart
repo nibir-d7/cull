@@ -19,6 +19,10 @@ abstract class HoardRepository {
 
   Future<void> restore(String id);
 
+  Future<void> setCategory(String id, String category);
+
+  List<String> categories();
+
   Future<void> markOpened(String id);
 
   Future<int> tone();
@@ -51,9 +55,7 @@ class EngineHoardRepository implements HoardRepository {
     String dbPath, {
     String? libraryPath,
   }) async {
-    return EngineHoardRepository(
-      Cull.open(dbPath, libraryPath: libraryPath),
-    );
+    return EngineHoardRepository(Cull.open(dbPath, libraryPath: libraryPath));
   }
 
   @override
@@ -87,16 +89,21 @@ class EngineHoardRepository implements HoardRepository {
   Future<HoardStats> stats() async => _engine.stats;
 
   @override
-  Future<CullReport> report({int? tone, int? week}) async => _engine.report(
-    tone: tone ?? _engine.tone,
-    week: week ?? _engine.week,
-  );
+  Future<CullReport> report({int? tone, int? week}) async =>
+      _engine.report(tone: tone ?? _engine.tone, week: week ?? _engine.week);
 
   @override
   Future<void> cull(String id) async => _engine.cull(id);
 
   @override
   Future<void> restore(String id) async => _engine.restore(id);
+
+  @override
+  Future<void> setCategory(String id, String category) async =>
+      _engine.setCategory(id, category);
+
+  @override
+  List<String> categories() => _engine.categories();
 
   @override
   Future<void> markOpened(String id) async => _engine.touchOpen(id);
@@ -125,7 +132,6 @@ class EngineHoardRepository implements HoardRepository {
       _engine.setSetting(key, value);
 
   @override
-  @override
   int get week => _engine.week;
 
   @override
@@ -133,5 +139,4 @@ class EngineHoardRepository implements HoardRepository {
 
   @override
   void close() => _engine.close();
-
 }

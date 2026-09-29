@@ -203,7 +203,7 @@ func runRules() error {
 
 func runReport(args []string) error {
 	fs := flag.NewFlagSet("report", flag.ExitOnError)
-	toneFlag := fs.String("tone", "blunt", "roast tone: soft, blunt, savage")
+	toneFlag := fs.String("tone", "blunt", "how direct: quiet, plain, direct")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -302,7 +302,7 @@ func printTable(items []core.Item, now time.Time) {
 	for _, it := range sorted {
 		title := it.Title
 		if len(title) > 36 {
-			title = title[:35] + "…"
+			title = title[:35] + "â€¦"
 		}
 		fmt.Printf("  %-38s %-19s %6.1f %6.2f  %s\n",
 			title, it.Verdict.Category, it.Verdict.Hoard.Total, it.Verdict.Action.Total,
@@ -312,9 +312,9 @@ func printTable(items []core.Item, now time.Time) {
 }
 
 func printReport(rep core.CullReport, tone core.Tone) {
-	fmt.Println("═" + strings.Repeat("═", 78))
-	fmt.Printf("  WEEK %d ROAST   (%s)\n", rep.Week, tone)
-	fmt.Println("═" + strings.Repeat("═", 78))
+	fmt.Println("â•" + strings.Repeat("â•", 78))
+	fmt.Printf("  WEEK %d VERDICT  (%s)\n", rep.Week, tone)
+	fmt.Println("â•" + strings.Repeat("â•", 78))
 	fmt.Println()
 	fmt.Printf("  %s\n\n", rep.Headline)
 
@@ -326,7 +326,7 @@ func printReport(rep core.CullReport, tone core.Tone) {
 	for i, p := range rep.Proposals {
 		label := strings.ToUpper(p.Kind.String())
 		if p.Kind == core.ProposalGroup {
-			label = fmt.Sprintf("GROUP · %s", p.Category)
+			label = fmt.Sprintf("GROUP Â· %s", p.Category)
 		}
 		fmt.Printf("  %d. %-28s %d link%s  (avg actionability %.2f)\n",
 			i+1, label, p.Count, plural(p.Count), p.AvgActionability)
@@ -334,10 +334,10 @@ func printReport(rep core.CullReport, tone core.Tone) {
 		for _, s := range p.Items {
 			title := s.Title
 			if len(title) > 44 {
-				title = title[:43] + "…"
+				title = title[:43] + "â€¦"
 			}
 			age := int(core.DaysSince(s.CreatedAt, time.Now()))
-			fmt.Printf("       · %-46s %s\n", title, pluralAge(age))
+			fmt.Printf("       Â· %-46s %s\n", title, pluralAge(age))
 		}
 		fmt.Println()
 	}
@@ -346,7 +346,7 @@ func printReport(rep core.CullReport, tone core.Tone) {
 	if rep.Cullable > 1 {
 		cta = fmt.Sprintf("CULL %d NOW", rep.Cullable)
 	}
-	fmt.Println("  " + strings.Repeat("─", 78))
+	fmt.Println("  " + strings.Repeat("â”€", 78))
 	fmt.Printf("  %d of %d links are rotting.\n", rep.Cullable, rep.TotalHoard)
 	fmt.Printf("  [ %s ]\n", cta)
 }

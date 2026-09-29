@@ -1,8 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../data/hoard_repository.dart';
 import '../design/components.dart';
+import '../design/controls.dart';
+import '../design/glyphs.dart';
+import '../design/shell.dart';
 import '../design/tokens.g.dart';
+import '../design/type.dart';
 import '../engine/cull_ffi.dart';
 import 'hoard_screen.dart';
 
@@ -21,9 +25,8 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   List<Link>? _results;
-  bool _busy = false;
   String? _error;
 
   @override
@@ -38,102 +41,102 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() => _results = null);
       return;
     }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    setState(() => _error = null);
     try {
       final found = await widget.repository.search(q);
       if (mounted) setState(() => _results = found);
-    } catch (e) {
+    } on Object catch (e) {
       if (mounted) setState(() => _error = '$e');
-    } finally {
-      if (mounted) setState(() => _busy = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
-      body: Column(
+    return CullPage(
+      eyebrow: 'Full text',
+      title: 'Search',
+      child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(CullTokens.spaceMd),
-            child: TextField(
+            padding: const EdgeInsets.symmetric(horizontal: CullTokens.spaceLg),
+            child: CullField(
               controller: _controller,
+              hint: 'Search your hoard',
               onSubmitted: (_) => _run(),
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'Search your hoard',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _busy
-                    ? const Padding(
-                        padding: EdgeInsets.all(CullTokens.spaceMd),
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: CullTokens.signal,
-                          ),
-                        ),
-                      )
-                    : IconButton(
-                        onPressed: _run,
-                        icon: const Icon(Icons.arrow_forward),
-                        tooltip: 'Search',
-                      ),
-              ),
             ),
           ),
           if (_error != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: CullTokens.spaceMd),
-              child: Text(_error!, style: t.textTheme.bodyMedium),
+              padding: const EdgeInsets.fromLTRB(
+                CullTokens.spaceLg,
+                CullTokens.spaceSm,
+                CullTokens.spaceLg,
+                0,
+              ),
+              child: Text(
+                _error!,
+                style: CullType.bodyS.copyWith(color: CullTokens.dangerDim),
+              ),
             ),
-          Expanded(child: _body(t)),
+          Expanded(child: _body()),
         ],
       ),
     );
   }
 
-  Widget _body(ThemeData t) {
+  Widget _body() {
     final results = _results;
     if (results == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(CullTokens.spaceXl),
-          child: Text(
-            'Full text search, ranked. It runs on the device, which is why it '
-            'works on a plane.',
-            textAlign: TextAlign.center,
-            style: t.textTheme.bodyLarge,
-          ),
-        ),
+      return const _Note(
+        'Type a word you remember. Everything is searched on this device, which '
+        'is the only reason it works on a plane.',
       );
     }
     if (results.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(CullTokens.spaceXl),
-          child: Text(
-            'Nothing matched. Either you have not saved it, or you saved it and '
-            'never read it, in which case you would not remember it anyway.',
-            textAlign: TextAlign.center,
-            style: t.textTheme.bodyLarge,
-          ),
-        ),
+      return const _Note(
+        'Nothing matched. Either it was never saved, or it was saved and never '
+        'read, in which case you would not have remembered it either.',
       );
     }
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: CullTokens.spaceMd),
-      itemCount: results.length,
-      separatorBuilder: (_, _) => const SizedBox(height: CullTokens.spaceSm),
-      itemBuilder: (context, i) => LinkCard(
-        link: results[i],
-        onTap: () => widget.onOpen(results[i]),
+    return CullScroll(
+      padding: const EdgeInsets.fromLTRB(
+        CullTokens.spaceLg,
+        CullTokens.spaceLg,
+        CullTokens.spaceLg,
+        96,
+      ),
+      child: Column(
+        children: [
+          for (final link in results)
+            Padding(
+              padding: const EdgeInsets.only(bottom: CullTokens.spaceSm),
+              child: LinkCard(link: link, onTap: () => widget.onOpen(link)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Note extends StatelessWidget {
+  const _Note(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          CullTokens.spaceXl,
+          CullTokens.spaceXl,
+          CullTokens.spaceXl,
+          96,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: Text(text, textAlign: TextAlign.center, style: CullType.bodyL),
+        ),
       ),
     );
   }
@@ -166,127 +169,135 @@ class _CullInboxScreenState extends State<CullInboxScreen> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cull inbox'),
-        actions: [
-          IconButton(
-            onPressed: _reload,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reload',
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async => _reload(),
-        child: ListView(
-          padding: const EdgeInsets.all(CullTokens.spaceMd),
-          children: [
-            FutureBuilder<CullReport>(
-              future: _future,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const SizedBox(height: 120);
-                final report = snapshot.data!;
-                return Column(
-                  children: [
-                    RoastCard(
-                      line: report.headline,
-                      tone: RoastAccent.blunt,
-                    ),
-                    const SizedBox(height: CullTokens.spaceMd),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${report.culled} of ${report.total} links are rotting.',
-                            style: t.textTheme.bodyMedium,
-                          ),
-                        ),
-                        FilledButton(
-                          onPressed: report.culled == 0 ? null : _cullAll,
-                          child: Text(report.cta),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: CullTokens.spaceLg),
-            Text('Waiting to be culled', style: t.textTheme.titleMedium),
-            const SizedBox(height: CullTokens.spaceSm),
-            FutureBuilder<List<Link>>(
-              future: _candidates,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const SizedBox(height: 80);
-                }
-                final links = snapshot.data!;
-                if (links.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: CullTokens.spaceLg,
-                    ),
-                    child: Text(
-                      'Nothing. Every link has been opened recently enough to be '
-                      'excused. Enjoy it while it lasts.',
-                      style: t.textTheme.bodyLarge,
-                    ),
-                  );
-                }
-                return Column(
-                  children: [
-                    for (final link in links)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: CullTokens.spaceSm,
-                        ),
-                        child: Dismissible(
-                          key: ValueKey(link.id),
-                          direction: DismissDirection.endToStart,
-                          background: _cullBackground(),
-                          onDismissed: (_) => _cull(link),
-                          child: LinkCard(link: link),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+  Future<void> _cull(Link link) async {
+    var failed = false;
+    try {
+      await widget.repository.cull(link.id);
+    } on Object {
+      failed = true;
+    }
+    _reload();
+    if (!mounted || !failed) return;
+    CullToast.show(
+      context,
+      'That one would not go',
+      tint: CullTokens.dangerDim,
     );
   }
 
-  Widget _cullBackground() => Container(
-    alignment: Alignment.centerRight,
-    padding: const EdgeInsets.only(right: CullTokens.spaceLg),
-    decoration: BoxDecoration(
-      color: CullTokens.danger.withValues(alpha: 0.18),
-      borderRadius: BorderRadius.circular(CullTokens.radiusLg),
-    ),
-    child: const Icon(Icons.delete_outline, color: CullTokens.danger),
-  );
-
-  Future<void> _cull(Link link) async {
-    try {
-      await widget.repository.cull(link.id);
-    } catch (_) {}
-    _reload();
-  }
-
   Future<void> _cullAll() async {
+    final ok = await cullConfirm(
+      context,
+      title: 'Cull them all?',
+      message:
+          'Everything the engine has marked will move to the Graveyard for 30 '
+          'days. You can restore any of it until then.',
+      confirmLabel: 'Cull them',
+    );
+    if (!ok) return;
     final links = await widget.repository.cullable(limit: 50);
+    var failed = 0;
     for (final link in links) {
       try {
         await widget.repository.cull(link.id);
-      } catch (_) {}
+      } on Object {
+        failed++;
+      }
     }
     _reload();
+    if (!mounted) return;
+    CullToast.show(
+      context,
+      failed == 0
+          ? 'Culled ${links.length}'
+          : 'Culled ${links.length - failed}, $failed would not go',
+      tint: failed == 0 ? null : CullTokens.dangerDim,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CullPage(
+      eyebrow: 'Worth finishing',
+      title: 'Cull inbox',
+      trailing: CullGlyphButton(
+        icon: CullIcon.refresh,
+        label: 'Reload',
+        onPressed: _reload,
+      ),
+      child: FutureBuilder<CullReport>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const CullLoading();
+          final report = snapshot.data!;
+          return CullScroll(
+            padding: const EdgeInsets.fromLTRB(
+              CullTokens.spaceLg,
+              0,
+              CullTokens.spaceLg,
+              96,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RoastCard(line: report.headline, loud: true),
+                const SizedBox(height: CullTokens.spaceLg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${report.culled} of ${report.total} are past the point '
+                        'of being worth keeping.',
+                        style: CullType.bodyM,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: CullTokens.spaceMd),
+                CullButton(
+                  label: report.cta,
+                  kind: CullButtonKind.danger,
+                  expand: true,
+                  onPressed: report.culled == 0 ? null : _cullAll,
+                ),
+                const SectionLabel(text: 'Waiting to be culled'),
+                FutureBuilder<List<Link>>(
+                  future: _candidates,
+                  builder: (context, snap) {
+                    if (!snap.hasData) {
+                      return const SizedBox(height: 80);
+                    }
+                    final links = snap.data!;
+                    if (links.isEmpty) {
+                      return Text(
+                        'Nothing. Every link has been opened recently enough to '
+                        'be excused.',
+                        style: CullType.bodyM,
+                      );
+                    }
+                    return Column(
+                      children: [
+                        for (final link in links)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: CullTokens.spaceSm,
+                            ),
+                            child: LinkCard(
+                              link: link,
+                              onCull: () => _cull(link),
+                              cullLabel: 'Cull',
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 
@@ -314,60 +325,74 @@ class _GraveyardScreenState extends State<GraveyardScreen> {
     });
   }
 
+  Future<void> _restore(Link link) async {
+    try {
+      await widget.repository.restore(link.id);
+      if (!mounted) return;
+      CullToast.show(context, 'Back in the hoard');
+    } on Object catch (e) {
+      if (!mounted) return;
+      CullToast.show(
+        context,
+        'Could not restore: $e',
+        tint: CullTokens.dangerDim,
+      );
+    }
+    _reload();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Graveyard'),
-        actions: [
-          IconButton(
-            onPressed: _reload,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reload',
-          ),
-        ],
+    return CullPage(
+      eyebrow: '30 days to change your mind',
+      title: 'Graveyard',
+      trailing: CullGlyphButton(
+        icon: CullIcon.refresh,
+        label: 'Reload',
+        onPressed: _reload,
       ),
-      body: FutureBuilder<List<Link>>(
+      child: FutureBuilder<List<Link>>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const CullLoading();
           }
           if (snapshot.hasError) {
-            return Center(child: Text('${snapshot.error}'));
-          }
-          final links = snapshot.data ?? const <Link>[];
-          if (links.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(CullTokens.spaceXl),
-                child: Text(
-                  'Empty. Nothing culled in the last 30 days, which means you '
-                  'are either disciplined or have not been using the app long '
-                  'enough to have any evidence.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
+                child: Text('${snapshot.error}', style: CullType.monoS),
               ),
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.all(CullTokens.spaceMd),
-            itemCount: links.length,
-            separatorBuilder: (_, _) => const SizedBox(height: CullTokens.spaceSm),
-            itemBuilder: (context, i) {
-              final link = links[i];
-              return LinkCard(
-                link: link,
-                cullLabel: 'Restore',
-                onCull: () async {
-                  try {
-                    await widget.repository.restore(link.id);
-                  } catch (_) {}
-                  _reload();
-                },
-              );
-            },
+          final links = snapshot.data ?? const <Link>[];
+          if (links.isEmpty) {
+            return const _Note(
+              'Nothing culled in the last 30 days. That either means you are '
+              'keeping up with what you save, or that you have not been using '
+              'the app long enough for there to be evidence.',
+            );
+          }
+          return CullScroll(
+            padding: const EdgeInsets.fromLTRB(
+              CullTokens.spaceLg,
+              0,
+              CullTokens.spaceLg,
+              96,
+            ),
+            child: Column(
+              children: [
+                for (final link in links)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: CullTokens.spaceSm),
+                    child: LinkCard(
+                      link: link,
+                      cullLabel: 'Restore',
+                      onCull: () => _restore(link),
+                    ),
+                  ),
+              ],
+            ),
           );
         },
       ),

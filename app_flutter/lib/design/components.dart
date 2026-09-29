@@ -1,8 +1,11 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
+import 'controls.dart';
+import 'glyphs.dart';
 import 'tokens.g.dart';
+import 'type.dart';
 
 int bandColorIndex(int band) => band.clamp(0, 3);
 
@@ -11,6 +14,20 @@ Color bandColor(int band) => switch (bandColorIndex(band)) {
   1 => CullTokens.hoardStale,
   2 => CullTokens.hoardRotting,
   _ => CullTokens.hoardGraveyard,
+};
+
+Color bandGraphic(int band) => switch (bandColorIndex(band)) {
+  0 => CullTokens.hoardFreshGraphic,
+  1 => CullTokens.hoardStaleGraphic,
+  2 => CullTokens.hoardRottingGraphic,
+  _ => CullTokens.hoardGraveyardGraphic,
+};
+
+String bandName(int band) => switch (bandColorIndex(band)) {
+  0 => 'fresh',
+  1 => 'stale',
+  2 => 'rotting',
+  _ => 'graveyard',
 };
 
 Color categoryColor(String category) => switch (category) {
@@ -22,6 +39,17 @@ Color categoryColor(String category) => switch (category) {
   'self-callout' => CullTokens.catSelfCallout,
   'rotting' => CullTokens.catRotting,
   _ => CullTokens.catReference,
+};
+
+Color categoryText(String category) => switch (category) {
+  'to-build' => CullTokens.catToBuildText,
+  'inspiration' => CullTokens.catInspirationText,
+  'tool hoard' => CullTokens.catToolHoardText,
+  'watch later' => CullTokens.catWatchLaterText,
+  'productivity porn' => CullTokens.catProductivityPornText,
+  'self-callout' => CullTokens.catSelfCalloutText,
+  'rotting' => CullTokens.catRottingText,
+  _ => CullTokens.catReferenceText,
 };
 
 Color categorySurface(String category) => switch (category) {
@@ -40,8 +68,8 @@ class GlassCard extends StatelessWidget {
     super.key,
     required this.child,
     this.onTap,
-    this.level = 2,
-    this.padding = const EdgeInsets.all(CullTokens.spaceMd),
+    this.level = 1,
+    this.padding = const EdgeInsets.all(CullTokens.spaceLg),
   });
 
   final Widget child;
@@ -51,37 +79,16 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(CullTokens.radiusLg);
-    final body = Container(
+    return CullSurface(
+      onTap: onTap,
       padding: padding,
-      decoration: BoxDecoration(
-        color: switch (level) {
-          1 => CullTokens.surface1,
-          3 => CullTokens.surface3,
-          4 => CullTokens.surface4,
-          _ => CullTokens.surface2,
-        },
-        borderRadius: radius,
-        border: Border.all(color: CullTokens.surface4),
-        boxShadow: switch (level) {
-          1 => CullTokens.glassLevel1Shadow,
-          3 => CullTokens.glassLevel3Shadow,
-          4 => CullTokens.glassLevel4Shadow,
-          _ => CullTokens.glassLevel2Shadow,
-        },
-      ),
+      background: switch (level) {
+        2 => CullTokens.surface2,
+        3 => CullTokens.surface3,
+        4 => CullTokens.surface4,
+        _ => CullTokens.surface1,
+      },
       child: child,
-    );
-
-    if (onTap == null) return body;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: body,
-      ),
     );
   }
 }
@@ -106,27 +113,61 @@ class Pill extends StatelessWidget {
       label: label,
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: dense ? CullTokens.spaceXs : CullTokens.spaceSm,
-          vertical: dense ? 2 : CullTokens.spaceXs,
+          horizontal: dense ? CullTokens.spaceSm : CullTokens.spaceMd,
+          vertical: dense ? 3 : 5,
         ),
         decoration: BoxDecoration(
           color: surface ?? color.withValues(alpha: 0.16),
           borderRadius: BorderRadius.circular(CullTokens.radiusPill),
-          border: Border.all(color: color.withValues(alpha: 0.55)),
         ),
         child: Text(
           label,
-          style: TextStyle(
+          style: (dense ? CullType.monoXs : CullType.monoS).copyWith(
             color: color,
-            fontSize: dense ? CullTokens.typeMonoXsSize : CullTokens.typeMonoSSize,
-            fontWeight: FontWeight.w500,
-            letterSpacing: CullTokens.typeMonoSTracking,
-            fontFamily: CullTokens.fontMono,
           ),
         ),
       ),
     );
   }
+}
+
+class CategoryPill extends StatelessWidget {
+  const CategoryPill({super.key, required this.category, this.dense = false});
+
+  final String category;
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    return CullTag(
+      label: category,
+      foreground: categoryText(category),
+      background: categorySurface(category),
+      dense: dense,
+      leading: SizedBox.square(
+        dimension: dense ? 5 : 6,
+        child: CustomPaint(painter: _DotPainter(categoryColor(category))),
+      ),
+    );
+  }
+}
+
+class _DotPainter extends CustomPainter {
+  const _DotPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawCircle(
+      size.center(Offset.zero),
+      size.shortestSide / 2,
+      Paint()..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_DotPainter old) => old.color != color;
 }
 
 class ScoreDial extends StatelessWidget {
@@ -143,10 +184,9 @@ class ScoreDial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = bandColor(band);
     final shown = score.roundToDouble();
     return Semantics(
-      label: 'Hoard score $shown out of 100, ${_bandName(band)}',
+      label: 'Hoard score $shown out of 100, ${bandName(band)}',
       excludeSemantics: true,
       child: SizedBox(
         width: size,
@@ -154,17 +194,15 @@ class ScoreDial extends StatelessWidget {
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: shown),
           duration: CullTokens.motionSettle,
-          curve: CullTokens.curveEmphasized,
+          curve: Curves.easeOutCubic,
           builder: (context, value, _) => CustomPaint(
-            painter: _DialPainter(value / 100, color),
+            painter: _DialPainter(value / 100, bandGraphic(band)),
             child: Center(
               child: Text(
                 value.round().toString(),
-                style: TextStyle(
-                  color: color,
-                  fontSize: size * 0.32,
-                  fontFamily: CullTokens.fontMono,
-                  fontWeight: FontWeight.w500,
+                style: CullType.monoL.copyWith(
+                  color: bandGraphic(band),
+                  fontSize: size * 0.3,
                 ),
               ),
             ),
@@ -173,17 +211,10 @@ class ScoreDial extends StatelessWidget {
       ),
     );
   }
-
-  static String _bandName(int band) => switch (bandColorIndex(band)) {
-    0 => 'fresh',
-    1 => 'stale',
-    2 => 'rotting',
-    _ => 'graveyard',
-  };
 }
 
 class _DialPainter extends CustomPainter {
-  _DialPainter(this.fraction, this.color);
+  const _DialPainter(this.fraction, this.color);
 
   final double fraction;
   final Color color;
@@ -191,21 +222,31 @@ class _DialPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const stroke = 4.0;
-    final rect = Offset(stroke / 2, stroke / 2) &
+    final rect =
+        Offset(stroke / 2, stroke / 2) &
         Size(size.width - stroke, size.height - stroke);
 
-    final track = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..color = CullTokens.surface4;
-    canvas.drawArc(rect, 0, math.pi * 2, false, track);
-
-    final arc = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round
-      ..color = color;
-    canvas.drawArc(rect, -math.pi / 2, math.pi * 2 * fraction, false, arc);
+    canvas.drawArc(
+      rect,
+      0,
+      math.pi * 2,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..color = CullTokens.surface3,
+    );
+    canvas.drawArc(
+      rect,
+      -math.pi / 2,
+      math.pi * 2 * fraction,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..strokeCap = StrokeCap.round
+        ..color = color,
+    );
   }
 
   @override
@@ -221,14 +262,14 @@ class ScoreExplanation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (leading != null) ...[leading!, const SizedBox(width: CullTokens.spaceSm)],
-        Expanded(
-          child: Text(text, style: t.textTheme.bodySmall),
-        ),
+        if (leading != null) ...[
+          leading!,
+          const SizedBox(width: CullTokens.spaceSm),
+        ],
+        Expanded(child: Text(text, style: CullType.bodyS)),
       ],
     );
   }
@@ -256,11 +297,11 @@ class BlobBackground extends StatelessWidget {
 }
 
 class _BlobPainter extends CustomPainter {
-  _BlobPainter(this.opacity);
+  const _BlobPainter(this.opacity);
 
   final double opacity;
 
-  static const _blobs = <(double, double, double, Color)>[
+  static const _washes = <(double, double, double, Color)>[
     (-0.15, -0.10, 0.55, CullTokens.blobA),
     (0.85, 0.05, 0.45, CullTokens.blobB),
     (0.35, 0.95, 0.50, CullTokens.blobC),
@@ -269,17 +310,22 @@ class _BlobPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     canvas.save();
-    canvas.clipRect(rect);
-    for (final (x, y, scale, color) in _blobs) {
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    for (final (x, y, scale, color) in _washes) {
       final centre = Offset(size.width * x, size.height * y);
       final radius = size.shortestSide * scale;
-      final paint = Paint()
-        ..shader = RadialGradient(
-          colors: [color.withValues(alpha: 0.30 * opacity), color.withValues(alpha: 0)],
-        ).createShader(Rect.fromCircle(center: centre, radius: radius));
-      canvas.drawCircle(centre, radius, paint);
+      canvas.drawCircle(
+        centre,
+        radius,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              color.withValues(alpha: 0.5 * opacity),
+              color.withValues(alpha: 0),
+            ],
+          ).createShader(Rect.fromCircle(center: centre, radius: radius)),
+      );
     }
     canvas.restore();
   }
@@ -289,45 +335,57 @@ class _BlobPainter extends CustomPainter {
 }
 
 class RoastCard extends StatelessWidget {
-  const RoastCard({super.key, required this.line, this.tone = RoastAccent.blunt});
+  const RoastCard({
+    super.key,
+    required this.line,
+    this.tone = RoastAccent.blunt,
+    this.loud = false,
+  });
 
   final String line;
   final RoastAccent tone;
+  final bool loud;
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
     final accent = switch (tone) {
       RoastAccent.soft => CullTokens.success,
       RoastAccent.savage => CullTokens.danger,
-      RoastAccent.blunt => CullTokens.signal,
+      RoastAccent.blunt => CullTokens.signalDim,
     };
+
+    if (!loud) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 2, height: 18, child: ColoredBox(color: accent)),
+          const SizedBox(width: CullTokens.spaceMd),
+          Expanded(
+            child: Text(
+              line,
+              style: CullType.bodyM.copyWith(color: CullTokens.inkSecondary),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(CullTokens.spaceLg),
+      padding: const EdgeInsets.all(CullTokens.spaceXl),
       decoration: BoxDecoration(
-        color: CullTokens.canvasDeep,
+        color: CullTokens.signalDeep,
         borderRadius: BorderRadius.circular(CullTokens.radiusLg),
         border: Border(left: BorderSide(color: accent, width: 4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'WEEKLY ROAST',
-            style: t.textTheme.labelLarge?.copyWith(
-              color: accent,
-              fontFamily: CullTokens.fontMono,
-              letterSpacing: CullTokens.typeLabelTracking,
-            ),
-          ),
+          Text('WORTH SAYING', style: CullType.monoXs.copyWith(color: accent)),
           const SizedBox(height: CullTokens.spaceSm),
           Text(
             line,
-            style: t.textTheme.displaySmall?.copyWith(
-              fontSize: CullTokens.typeTitleLSize,
-              height: CullTokens.typeTitleLLineHeight,
-            ),
+            style: CullType.titleL.copyWith(color: CullTokens.inkInverse),
           ),
         ],
       ),
@@ -344,16 +402,146 @@ class PullQuote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: CullTokens.spaceSm),
-      child: Text(
-        text,
-        style: t.textTheme.bodyLarge?.copyWith(
-          fontStyle: FontStyle.italic,
-          color: CullTokens.inkTertiary,
-        ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 3,
+            height: 34,
+            decoration: BoxDecoration(
+              color: CullTokens.inkDisabled,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: CullTokens.spaceMd),
+          Expanded(
+            child: Text(
+              text,
+              style: CullType.bodyL.copyWith(color: CullTokens.inkTertiary),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class SectionLabel extends StatelessWidget {
+  const SectionLabel({super.key, required this.text, this.trailing});
+
+  final String text;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: CullTokens.spaceXl),
+      child: Row(
+        children: [
+          Text(
+            text.toUpperCase(),
+            style: CullType.monoXs.copyWith(color: CullTokens.inkTertiary),
+          ),
+          const SizedBox(width: CullTokens.spaceMd),
+          Expanded(
+            child: SizedBox(
+              height: 1,
+              child: ColoredBox(
+                color: CullTokens.inkDisabled.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: CullTokens.spaceMd),
+            trailing!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class CullRow extends StatelessWidget {
+  const CullRow({
+    super.key,
+    required this.leading,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+    this.dense = false,
+  });
+
+  final Widget? leading;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    return CullSurface(
+      onTap: onTap,
+      radius: CullTokens.radiusMd,
+      padding: EdgeInsets.symmetric(
+        horizontal: CullTokens.spaceLg,
+        vertical: dense ? CullTokens.spaceMd : CullTokens.spaceLg,
+      ),
+      child: Row(
+        children: [
+          if (leading != null) ...[
+            leading!,
+            const SizedBox(width: CullTokens.spaceMd),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title, style: CullType.titleM),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(subtitle!, style: CullType.bodyS),
+                ],
+              ],
+            ),
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: CullTokens.spaceMd),
+            trailing!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class CullGlyphButton extends StatelessWidget {
+  const CullGlyphButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.onPressed,
+    this.color,
+    this.size = 20,
+  });
+
+  final CullIcon icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final Color? color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return CullIconButton(
+      label: label,
+      onPressed: onPressed,
+      size: size,
+      icon: CullGlyph(icon, color: color ?? CullTokens.inkSecondary),
     );
   }
 }

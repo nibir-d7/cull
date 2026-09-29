@@ -70,21 +70,30 @@ func CompileDart(t *Tokens) ([]byte, error) {
 	}
 
 	b.WriteString("\n  // -- HoardScore bands --\n")
+
+	b.WriteString("  // Fill and stroke are separate on purpose. See design/tokens.go BandToken.\n")
 	for _, n := range t.BandNames() {
 		band := t.HoardBand[n]
 		c := MustHex(band.Value)
-		fmt.Fprintf(&b, "  static const Color hoard%s = Color(0xFF%02X%02X%02X); // %s\n",
+		g := MustHex(band.Graphic)
+		fmt.Fprintf(&b, "  static const Color hoard%s = Color(0xFF%02X%02X%02X); // %s fill\n",
 			ClassName(n), c.R, c.G, c.B, band.Label)
+		fmt.Fprintf(&b, "  static const Color hoard%sGraphic = Color(0xFF%02X%02X%02X); // %s stroke\n",
+			ClassName(n), g.R, g.G, g.B, band.Label)
+		fmt.Fprintf(&b, "  static const String hoard%sLabel = %q;\n", ClassName(n), band.Label)
 	}
 
 	b.WriteString("\n  // -- Categories --\n")
-	b.WriteString("  /// Hue is meaning, but never the only meaning: every pill carries its\n")
-	b.WriteString("  /// label text, so the hue is redundant reinforcement.\n")
+	b.WriteString("  /// catX is the MARK (dot, bar, border) on the cream. catXText is the\n")
+	b.WriteString("  /// LABEL on catXSurface. Always render the label too: colour is the\n")
+	b.WriteString("  /// redundant cue, never the only one.\n")
 	for _, k := range t.CategoryNames() {
 		cat := t.Category[k]
 		c := MustHex(cat.Value)
 		s := MustHex(cat.Surface)
+		tx := MustHex(cat.Text)
 		fmt.Fprintf(&b, "  static const Color cat%s = Color(0xFF%02X%02X%02X);\n", ClassName(k), c.R, c.G, c.B)
+		fmt.Fprintf(&b, "  static const Color cat%sText = Color(0xFF%02X%02X%02X);\n", ClassName(k), tx.R, tx.G, tx.B)
 		fmt.Fprintf(&b, "  static const Color cat%sSurface = Color(0xFF%02X%02X%02X);\n", ClassName(k), s.R, s.G, s.B)
 		fmt.Fprintf(&b, "  static const double cat%sTint = %s;\n", ClassName(k), fmtFloat(cat.TintAlpha))
 		fmt.Fprintf(&b, "  static const String cat%sLabel = %q;\n", ClassName(k), cat.Label)

@@ -385,7 +385,11 @@ func (s *Store) score(b *Bookmark, now time.Time) {
 	b.Verdict = v
 	b.HoardScore = v.Hoard.Total
 	b.Actionability = v.Action.Total
-	b.Category = v.Category
+	if !b.Category.Valid() {
+		b.Category = v.Category
+		v.Category = b.Category
+		b.Verdict = v
+	}
 	b.ScoredAt = time.Now().Unix()
 }
 
@@ -464,6 +468,22 @@ func (s *Store) Cull(id string, now time.Time) error {
 
 func (s *Store) Restore(id string) error {
 	res, err := s.sql.Exec(`UPDATE bookmarks SET culled_at = NULL WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *Store) SetCategory(id string, c core.Category) error {
+	if !c.Valid() {
+		return fmt.Errorf("db: %q is not a category", c)
+	}
+	res, err := s.sql.Exec(
+		`UPDATE bookmarks SET category = ?, scored_at = 0 WHERE id = ?`,
+		string(c), id)
 	if err != nil {
 		return err
 	}

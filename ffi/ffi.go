@@ -173,6 +173,27 @@ func CULLTouchOpen(h C.int, id *C.char, nowMillis C.longlong) *C.char {
 	return out(map[string]any{"ok": true})
 }
 
+//export CULLSetCategory
+func CULLSetCategory(h C.int, id *C.char, category *C.char) *C.char {
+	s := storeAt(h)
+	if s == nil || id == nil || category == nil {
+		return out(map[string]any{"error": "bad store"})
+	}
+	if err := s.SetCategory(C.GoString(id), C.GoString(category)); err != nil {
+		return out(map[string]any{"error": err.Error()})
+	}
+	return out(map[string]any{"ok": true})
+}
+
+//export CULLCategories
+func CULLCategories(h C.int) *C.char {
+	s := storeAt(h)
+	if s == nil {
+		return out(map[string]any{"error": "bad store"})
+	}
+	return out(s.Categories())
+}
+
 //export CULLReport
 func CULLReport(h C.int, tone C.int, week C.int) *C.char {
 	s := storeAt(h)

@@ -171,6 +171,18 @@ func (s *Store) TouchOpen(id string, nowMillis int64) error {
 	return s.inner.TouchOpen(id, time.UnixMilli(nowMillis))
 }
 
+func (s *Store) SetCategory(id, category string) error {
+	return s.inner.SetCategory(id, core.Category(category))
+}
+
+func (s *Store) Categories() []string {
+	out := make([]string, 0, len(core.AllCategories))
+	for _, c := range core.AllCategories {
+		out = append(out, string(c))
+	}
+	return out
+}
+
 func (s *Store) Report(tone int, week int) (Report, error) {
 	all, err := s.inner.All()
 	if err != nil {

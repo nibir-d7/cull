@@ -1,9 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../data/hoard_repository.dart';
 import '../design/components.dart';
+import '../design/controls.dart';
+import '../design/glyphs.dart';
 import '../design/masonry.dart';
+import '../design/shell.dart';
 import '../design/tokens.g.dart';
+import '../design/type.dart';
 import '../engine/cull_ffi.dart';
 
 class LinkCard extends StatelessWidget {
@@ -22,9 +26,9 @@ class LinkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
-    return GlassCard(
+    return CullSurface(
       onTap: onTap,
+      padding: const EdgeInsets.all(CullTokens.spaceMd),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -36,11 +40,11 @@ class LinkCard extends StatelessWidget {
                   link.title.isEmpty ? link.url : link.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: t.textTheme.titleMedium,
+                  style: CullType.titleM,
                 ),
               ),
-              const SizedBox(width: CullTokens.spaceMd),
-              ScoreDial(score: link.hoardScore, band: link.band, size: 44),
+              const SizedBox(width: CullTokens.spaceSm),
+              ScoreDial(score: link.hoardScore, band: link.band, size: 42),
             ],
           ),
           if (link.excerpt.isNotEmpty) ...[
@@ -49,33 +53,35 @@ class LinkCard extends StatelessWidget {
               link.excerpt,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: t.textTheme.bodyMedium,
+              style: CullType.bodyS,
             ),
           ],
           const SizedBox(height: CullTokens.spaceSm),
           Row(
             children: [
-              Pill(
-                label: link.category,
-                color: categoryColor(link.category),
-                surface: categorySurface(link.category),
-                dense: true,
+              Flexible(
+                child: CategoryPill(category: link.category, dense: true),
               ),
-              const SizedBox(width: CullTokens.spaceXs),
               if (link.duplicateCount > 0) ...[
-                Pill(
-                  label: 'x${link.duplicateCount}',
-                  color: CullTokens.warn,
-                  dense: true,
-                ),
                 const SizedBox(width: CullTokens.spaceXs),
-              ],
-              if (link.culled)
-                const Pill(
-                  label: 'culled',
-                  color: CullTokens.inkTertiary,
+                CullTag(
+                  label: 'x${link.duplicateCount}',
+                  foreground: CullTokens.accentDim,
+                  background: CullTokens.accent.withValues(alpha: 0.18),
+                  monospace: true,
                   dense: true,
                 ),
+              ],
+              if (link.culled) ...[
+                const SizedBox(width: CullTokens.spaceXs),
+                CullTag(
+                  label: 'culled',
+                  foreground: CullTokens.inkTertiary,
+                  background: CullTokens.surface3,
+                  monospace: true,
+                  dense: true,
+                ),
+              ],
             ],
           ),
           const SizedBox(height: CullTokens.spaceSm),
@@ -83,14 +89,18 @@ class LinkCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${link.domain}  ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  ${link.ageDays}d  ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  ${link.bandLabel}',
-                  style: t.textTheme.labelSmall,
+                  '${link.domain}  ${link.ageDays}d  ${link.bandLabel}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: CullType.monoXs,
                 ),
               ),
               if (onCull != null)
-                TextButton(
+                CullButton(
+                  label: cullLabel,
+                  kind: CullButtonKind.ghost,
+                  dense: true,
                   onPressed: onCull,
-                  child: Text(cullLabel),
                 ),
             ],
           ),
@@ -106,11 +116,13 @@ class HoardScreen extends StatefulWidget {
     required this.repository,
     required this.onOpen,
     this.onSettings,
+    this.onAdd,
   });
 
   final HoardRepository repository;
   final void Function(Link link) onOpen;
   final VoidCallback? onSettings;
+  final VoidCallback? onAdd;
 
   @override
   State<HoardScreen> createState() => _HoardScreenState();
@@ -134,88 +146,89 @@ class _HoardScreenState extends State<HoardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Your hoard'),
-        actions: [
-          if (widget.onSettings != null)
-            IconButton(
-              onPressed: widget.onSettings,
-              icon: const Icon(Icons.settings_outlined),
-              tooltip: 'Settings',
+    return CullPage(
+      eyebrow: 'Everything you saved',
+      title: 'Your hoard',
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.onAdd != null)
+            CullGlyphButton(
+              icon: CullIcon.add,
+              label: 'Add a link by hand',
+              onPressed: widget.onAdd,
+              color: CullTokens.inkSecondary,
             ),
-          IconButton(
+          if (widget.onSettings != null)
+            CullGlyphButton(
+              icon: CullIcon.settings,
+              label: 'Settings',
+              onPressed: widget.onSettings,
+            ),
+          CullGlyphButton(
+            icon: CullIcon.refresh,
+            label: 'Reload',
             onPressed: _reload,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reload',
           ),
         ],
       ),
-      body: BlobBackground(
-        child: Column(
-          children: [
-            _FilterBar(
-              value: _filter,
-              onChanged: (v) => setState(() => _filter = v),
-            ),
-            Expanded(
-              child: FutureBuilder<List<Link>>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const _Loading();
-                  }
-                  if (snapshot.hasError) {
-                    return _Error(
-                      message: '${snapshot.error}',
-                      onRetry: _reload,
-                    );
-                  }
-                  final links = snapshot.data ?? const <Link>[];
-                  if (links.isEmpty) {
-                    return const _Empty(
-                      title: 'Nothing saved yet',
-                      body: 'Share a link to the app and it will land here, '
-                          'be scored, and told what it is.',
-                    );
-                  }
-                  final visible = _filter == 'all'
-                      ? links
-                      : links.where((l) => l.bandLabel == _filter).toList();
-                  if (visible.isEmpty) {
-                    return _Empty(
-                      title: 'Nothing in ${_filterLabel(_filter)}',
-                      body: 'The rest of your hoard is in better shape, which is '
-                          'the good news.',
-                      onRetry: _reload,
-                    );
-                  }
-                  return RefreshIndicator(
-                    onRefresh: () async => _reload(),
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(CullTokens.spaceMd),
-                      child: MasonryHoard(
-                        itemCount: visible.length,
-                        columns: 2,
-                        heightFor: (_, i) => _cardHeight(visible[i]),
-                        itemBuilder: (context, i) => LinkCard(
-                          link: visible[i],
-                          onTap: () => widget.onOpen(visible[i]),
-                        ),
-                      ),
-                    ),
+      child: Column(
+        children: [
+          _FilterBar(
+            value: _filter,
+            onChanged: (v) => setState(() => _filter = v),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Link>>(
+              future: _future,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CullLoading();
+                }
+                if (snapshot.hasError) {
+                  return _Error(message: '${snapshot.error}', onRetry: _reload);
+                }
+                final links = snapshot.data ?? const <Link>[];
+                if (links.isEmpty) {
+                  return const _EmptyHoard();
+                }
+                final visible = _filter == 'all'
+                    ? links
+                    : links.where((l) => l.bandLabel == _filter).toList();
+                if (visible.isEmpty) {
+                  return _Empty(
+                    title: 'Nothing in $_filter',
+                    body:
+                        'The rest of your hoard is in better shape, which is '
+                        'the good news.',
+                    onRetry: _reload,
+                    retryLabel: 'Show everything',
                   );
-                },
-              ),
+                }
+                return CullScroll(
+                  padding: const EdgeInsets.fromLTRB(
+                    CullTokens.spaceMd,
+                    CullTokens.spaceSm,
+                    CullTokens.spaceMd,
+                    96,
+                  ),
+                  child: MasonryHoard(
+                    itemCount: visible.length,
+                    columns: 2,
+                    heightFor: (_, i) => _cardHeight(visible[i]),
+                    itemBuilder: (context, i) => LinkCard(
+                      link: visible[i],
+                      onTap: () => widget.onOpen(visible[i]),
+                    ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-
-  static String _filterLabel(String v) => v;
 
   static double _cardHeight(Link link) {
     var h = 44.0;
@@ -238,51 +251,45 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: CullTokens.minTouchTarget + CullTokens.spaceMd,
+      height: CullTokens.minTouchTarget,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: CullTokens.spaceMd),
+        padding: const EdgeInsets.symmetric(horizontal: CullTokens.spaceLg),
         itemCount: _options.length,
-        separatorBuilder: (_, _) => const SizedBox(width: CullTokens.spaceXs),
+        separatorBuilder: (_, _) => const SizedBox(width: CullTokens.spaceLg),
         itemBuilder: (context, i) {
           final option = _options[i];
           final selected = option == value;
-          return Center(
-            child: ChoiceChip(
-              label: Text(option),
-              selected: selected,
-              onSelected: (_) => onChanged(option),
-              labelStyle: TextStyle(
-                color: selected ? CullTokens.inkOnAccent : CullTokens.inkSecondary,
-                fontFamily: CullTokens.fontMono,
-                fontSize: CullTokens.typeMonoSSize,
-              ),
-              selectedColor: CullTokens.signal,
-              backgroundColor: CullTokens.surface1,
-              side: BorderSide(
-                color: selected ? CullTokens.signal : CullTokens.surface4,
+          final color = selected
+              ? CullTokens.signalDim
+              : CullTokens.inkTertiary;
+          return Semantics(
+            button: true,
+            selected: selected,
+            child: GestureDetector(
+              onTap: () => onChanged(option),
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        option.toUpperCase(),
+                        style: CullType.monoXs.copyWith(color: color),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    height: 2,
+                    width: selected ? 22 : 0,
+                    color: CullTokens.signalDim,
+                  ),
+                ],
               ),
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _Loading extends StatelessWidget {
-  const _Loading();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: SizedBox(
-        width: 24,
-        height: 24,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: CullTokens.signal,
-        ),
       ),
     );
   }
@@ -305,6 +312,81 @@ class _Error extends StatelessWidget {
   }
 }
 
+class _EmptyHoard extends StatelessWidget {
+  const _EmptyHoard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          CullTokens.spaceXl,
+          CullTokens.spaceXl,
+          CullTokens.spaceXl,
+          96,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Nothing here yet', style: CullType.displayS),
+            const SizedBox(height: CullTokens.spaceLg),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Text(
+                'You are looking at the place where your saved things will go. '
+                'It is empty because nothing has been sent to CULL yet.',
+                style: CullType.bodyL,
+              ),
+            ),
+            const SizedBox(height: CullTokens.spaceN2xl),
+            Container(
+              padding: const EdgeInsets.all(CullTokens.spaceXl),
+              decoration: BoxDecoration(
+                color: CullTokens.canvasDeep,
+                borderRadius: BorderRadius.circular(CullTokens.radiusLg),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CullGlyph(
+                        CullIcon.share,
+                        size: 18,
+                        color: CullTokens.signalDim,
+                      ),
+                      const SizedBox(width: CullTokens.spaceSm),
+                      Text(
+                        'SHARE A LINK TO CULL',
+                        style: CullType.monoXs.copyWith(
+                          color: CullTokens.inkSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: CullTokens.spaceMd),
+                  Text(
+                    'Open anything you want to keep, tap Share, and choose '
+                    'CULL. It arrives here already categorised.',
+                    style: CullType.bodyM,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: CullTokens.spaceXl),
+            Text(
+              'A news article, a video, a product, a thread. The kind of thing '
+              'is the same and so is the gesture.',
+              style: CullType.bodyS,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _Empty extends StatelessWidget {
   const _Empty({
     required this.title,
@@ -320,27 +402,34 @@ class _Empty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(CullTokens.spaceXl),
+        padding: const EdgeInsets.fromLTRB(
+          CullTokens.spaceXl,
+          CullTokens.spaceXl,
+          CullTokens.spaceXl,
+          96,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: t.textTheme.headlineMedium,
-            ),
-            const SizedBox(height: CullTokens.spaceSm),
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style: t.textTheme.bodyLarge,
+            Text(title, textAlign: TextAlign.center, style: CullType.displayS),
+            const SizedBox(height: CullTokens.spaceMd),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Text(
+                body,
+                textAlign: TextAlign.center,
+                style: CullType.bodyL,
+              ),
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: CullTokens.spaceLg),
-              OutlinedButton(onPressed: onRetry, child: Text(retryLabel)),
+              const SizedBox(height: CullTokens.spaceXl),
+              CullButton(
+                label: retryLabel,
+                kind: CullButtonKind.outline,
+                onPressed: onRetry,
+              ),
             ],
           ],
         ),

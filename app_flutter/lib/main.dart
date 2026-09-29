@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import 'data/hoard_repository.dart';
 import 'design/components.dart';
-import 'design/theme.dart';
+import 'design/glyphs.dart';
+import 'design/shell.dart';
 import 'design/tokens.g.dart';
+import 'design/type.dart';
 import 'engine/cull_ffi.dart';
-import 'features/detail_screen.dart';
 import 'features/add_link_sheet.dart';
+import 'features/detail_screen.dart';
 import 'features/hoard_screen.dart';
-import 'features/roast_screen.dart';
 import 'features/secondary_screens.dart';
 import 'features/settings_screen.dart';
 import 'onboarding/copy.dart';
@@ -19,20 +20,20 @@ import 'platform/shared_url.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(CullTheme.overlay);
-  runApp(const CullApp());
+  SystemChrome.setSystemUIOverlayStyle(CullApp.overlay);
+  runApp(const Culling());
 }
 
-class CullApp extends StatelessWidget {
-  const CullApp({super.key});
+class Culling extends StatelessWidget {
+  const Culling({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CULL',
-      debugShowCheckedModeBanner: false,
-      theme: CullTheme.dark(),
-      home: const EngineGate(),
+    return CullApp(
+      child: Navigator(
+        onGenerateRoute: (settings) =>
+            CullRoute<void>(builder: (_) => const EngineGate()),
+      ),
     );
   }
 }
@@ -72,29 +73,33 @@ class _EngineGateState extends State<EngineGate> {
       future: _repository,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(color: CullTokens.signal),
-            ),
+          return const CullPage(
+            child: CullLoading(label: 'Reading your links'),
           );
         }
         if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(
+          return CullPage(
+            child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(CullTokens.spaceXl),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    CullGlyph(
+                      CullIcon.close,
+                      size: 28,
+                      color: CullTokens.dangerDim,
+                    ),
+                    const SizedBox(height: CullTokens.spaceLg),
                     Text(
                       'The engine would not start',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: CullType.displayS,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: CullTokens.spaceSm),
+                    const SizedBox(height: CullTokens.spaceMd),
                     Text(
                       '${snapshot.error}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: CullType.monoS,
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -175,7 +180,7 @@ class _HomeShellState extends State<HomeShell> {
 
   void _open(Link link) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      CullRoute<void>(
         builder: (_) => DetailScreen(link: link, repository: widget.repository),
       ),
     );
@@ -183,7 +188,7 @@ class _HomeShellState extends State<HomeShell> {
 
   void _openSettings() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      CullRoute<void>(
         builder: (_) => SettingsScreen(repository: widget.repository),
       ),
     );
@@ -191,53 +196,119 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = <Widget>[
-      HoardScreen(
-        repository: widget.repository,
-        onOpen: _open,
-        onSettings: _openSettings,
+    return CullToastHost(
+      child: ColoredBox(
+        color: CullTokens.canvas,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: BlobBackground(
+                child: IndexedStack(
+                  index: _index,
+                  children: [
+                    HoardScreen(
+                      repository: widget.repository,
+                      onOpen: _open,
+                      onSettings: _openSettings,
+                      onAdd: _openAdd,
+                    ),
+                    SearchScreen(repository: widget.repository, onOpen: _open),
+                    CullInboxScreen(repository: widget.repository),
+                    GraveyardScreen(repository: widget.repository),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _NavBar(
+                index: _index,
+                onSelect: (i) => setState(() => _index = i),
+              ),
+            ),
+          ],
+        ),
       ),
-      SearchScreen(repository: widget.repository, onOpen: _open),
-      CullInboxScreen(repository: widget.repository),
-      GraveyardScreen(repository: widget.repository),
-      RoastScreen(repository: widget.repository),
-    ];
+    );
+  }
+}
 
-    return Scaffold(
-      floatingActionButton: _index == 0
-          ? FloatingActionButton.extended(
-              onPressed: _openAdd,
-              backgroundColor: CullTokens.signal,
-              foregroundColor: CullTokens.inkOnAccent,
-              icon: const Icon(Icons.add),
-              label: const Text('Save a link'),
-            )
-          : null,
-      body: BlobBackground(
-        child: IndexedStack(index: _index, children: pages),
+class _NavBar extends StatelessWidget {
+  const _NavBar({required this.index, required this.onSelect});
+
+  final int index;
+  final ValueChanged<int> onSelect;
+
+  static const _items = <(CullIcon, String)>[
+    (CullIcon.layers, 'Hoard'),
+    (CullIcon.search, 'Search'),
+    (CullIcon.sweep, 'Cull'),
+    (CullIcon.clock, 'Graveyard'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: CullTokens.canvas.withValues(alpha: 0.96),
+        border: Border(top: BorderSide(color: CullTokens.inkDisabled)),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        backgroundColor: CullTokens.canvasDeep,
-        indicatorColor: CullTokens.signal.withValues(alpha: 0.18),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.layers_outlined),
-            selectedIcon: Icon(Icons.layers),
-            label: 'Hoard',
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
+          child: Row(
+            children: [
+              for (var i = 0; i < _items.length; i++)
+                Expanded(
+                  child: _NavItem(
+                    icon: _items[i].$1,
+                    label: _items[i].$2,
+                    selected: i == index,
+                    onTap: () => onSelect(i),
+                  ),
+                ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.delete_sweep_outlined),
-            selectedIcon: Icon(Icons.delete_sweep),
-            label: 'Cull',
-          ),
+        ),
+      ),
+    );
+  }
+}
 
-        ],
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final CullIcon icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? CullTokens.signalDim : CullTokens.inkTertiary;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CullGlyph(icon, size: 21, color: color, weight: selected ? 2.4 : 2),
+            const SizedBox(height: 5),
+            Text(label, style: CullType.monoXs.copyWith(color: color)),
+          ],
+        ),
       ),
     );
   }

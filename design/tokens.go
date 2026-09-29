@@ -49,14 +49,16 @@ type ColorValue struct {
 }
 
 type BandToken struct {
-	Value string `json:"value"`
-	Label string `json:"label"`
-	Range string `json:"range"`
+	Value   string `json:"value"`
+	Graphic string `json:"graphic"`
+	Label   string `json:"label"`
+	Range   string `json:"range"`
 }
 
 type Category struct {
 	Label     string  `json:"label"`
 	Value     string  `json:"value"`
+	Text      string  `json:"text"`
 	Surface   string  `json:"surface"`
 	Tint      string  `json:"tint"`
 	TintAlpha float64 `json:"tintAlpha"`

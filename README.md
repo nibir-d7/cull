@@ -1,121 +1,81 @@
 # CULL
 
-A bookmark manager for people with a bookmark problem.
+**Saved is not the same as read.**
 
-CULL sorts what you saved, scores how long it has been rotting, finds the
-duplicates you saved four times, and tells you plainly which links were never
-going to be opened. It can be set to be blunt or outright rude about it.
+CULL is a bookmark manager for people who save a lot of things and act on very
+few of them. It sits on your phone, it sorts what you send it, it ages what you
+ignore, and it tells you the truth about the gap. That is the entire product.
 
-## Design
+No account. No cloud. No sync. No analytics. The list is a file in the app's own
+directory, and the only network request CULL ever makes is fetching a page you
+just shared so it can work out what it is.
 
-Local-first. No account, no cloud, no sync, no backup, no analytics.
+## Download
 
-The database is a SQLite file in the app's private directory. There is no
-server, so there is no operator who could read it. Android cloud backup and
-device-transfer backup are disabled for the database. The only network request
-the app makes is fetching the page you just shared, so it can work out what the
-link is.
+**Android â€” [cull-0.0.3.apk](https://github.com/nibir-d7/cull/releases/latest)**
 
-## Stack
+Download the APK, allow installation from your browser if Android asks, and open
+it. That is the whole install.
 
-- **Engine** — Go. Deterministic rules, regex scoring and SimHash
-  deduplication. No model inference, on device or otherwise.
-- **Storage** — SQLite via `modernc.org/sqlite`. Pure Go, so it cross-compiles
-  to Android without cgo.
-- **Search** — SQLite FTS5 with BM25 ranking.
-- **UI** — Flutter, Material 3, dark only.
-- **Design system** — `design/tokens.json` compiles to Dart, CSS and SVG.
+Minimum Android 7.0 (API 24). The build is universal, so one APK covers every
+device.
 
-## Layout
+> The release is signed with a debug key. It installs and runs fine from a
+> direct download, which is the point right now. A Play Store build would need
+> a real upload key.
 
-| Path | What it holds |
-| --- | --- |
-| `core/` | Scoring, categorisation, SimHash dedupe, roast templates, cull engine |
-| `db/` | Store, migrations, FTS5 search, graveyard |
-| `ingest/` | Fetch, readability extraction, pipeline |
-| `design/` | Token and component schemas, validators, generators |
-| `bind/` | Engine API exposed to the UI layer |
-| `ffi/` | C ABI over `bind/`, built as a shared library |
-| `cmd/cullctl/` | Command line interface |
-| `cmd/designtool/` | Design token validator and compiler |
-| `app_flutter/` | Flutter application |
+## Why
 
-## Engine interface
+Most of what you keep is not lost. It is sitting there, perfectly preserved,
+unopened, and it is never going to be opened.
 
-The Go engine is reached from Dart over `dart:ffi`. `bind/` holds the API and
-`ffi/` exports it as a flat C surface that returns JSON, so no struct layout is
-shared across the language boundary.
+The apps built around this problem offer you folders, tags, and a "read it
+later" queue. All of those are storage solutions to a prioritisation problem.
+A pile of unread bookmarks does not need better organisation; it needs someone
+to point at the specific twelve that are not going to happen and ask whether
+you meant that.
 
-```sh
-go build -buildmode=c-shared -o build/cullffi/cull.dll ./ffi
+CULL does exactly that, and then it stops talking. It is not trying to make you
+feel bad so that you open it more, and it is not trying to be funny at you. It
+makes one argument â€” reading about doing the work has started to feel like
+doing the work â€” and it makes it plainly, in a line of text, with the number
+next to it.
+
+Three things it does:
+
+- **Sorts for you.** Every link you send is categorised on arrival, from its
+  domain and its text. You can overrule it, one tap, on the link's own screen.
+- **Ages honestly.** Every link has a hoard score built from its age, how often
+  you opened it, how much duplication it carries, and whether anything in it
+  tells you what to do next. Nothing is hidden behind a streak or a badge.
+- **Offers it back.** The Cull inbox is everything past the point of being worth
+  keeping. Cull it and it sits in the Graveyard for 30 days, fully reversible,
+  then it is gone.
+
+## How you use it
+
+Open any article, video, product page or thread. Hit **Share**. Choose **CULL**.
+It lands in your hoard, already sorted.
+
+That is the whole interaction. There is no "add link" button shouting at you
+when you open the app, because the app's job is to show you what you already
+saved, not to ask for more. Sharing from another app is the gesture you already
+have.
+
+## How it is built
+
+A Go engine â€” categorisation, scoring, SimHash deduplication, FTS5 search,
+SQLite â€” behind a `c-shared` library, called from Flutter over `dart:ffi`. No
+network round trip, no serialisation service, no web view. The database is a
+single SQLite file.
+
+The design is four colours on cream paper, one typeface (Geist), and no
+Material. Every control is drawn.
+
+The source is in this repository. Run the tests, not the app, if you want to see
+how it holds up:
+
 ```
-
-`ffi/` is a `cgo` package, so it needs a C toolchain. Every other package is
-pure Go and cross-compiles freely.
-
-### Android
-
-Cross-compile the shared library for each ABI before building the app. The
-Android SDK path must not contain spaces.
-
-```sh
-powershell -ExecutionPolicy Bypass -File tool/build-android-libs.ps1
-cd app_flutter && flutter build apk
+go test ./...
+cd app_flutter && flutter test
 ```
-
-This writes `libcull.so` for `arm64-v8a`, `armeabi-v7a` and `x86_64` into
-`app_flutter/android/app/src/main/jniLibs/`, which Gradle packages into the APK.
-Set `ANDROID_HOME`, or `ANDROID_NDK_HOME` to pin a specific NDK.
-
-The app starts no network traffic of its own. `android.permission.INTERNET` is
-declared solely so the app can read the page you just shared, and
-`android:allowBackup` is off so the database is never copied to a cloud backup.
-
-## Build
-
-Requires Go 1.26+ and Flutter 3.47+.
-
-```sh
-go build ./core/... ./db/... ./ingest/... ./design/... ./bind/... ./cmd/...
-go run ./cmd/designtool compile
-go run ./cmd/designtool assets
-cd app_flutter && flutter run
-```
-
-## Command line
-
-```sh
-go run ./cmd/cullctl demo
-go run ./cmd/cullctl report
-go run ./cmd/cullctl save https://example.com
-go run ./cmd/cullctl find "query"
-go run ./cmd/cullctl stats
-```
-
-## Design tokens
-
-`design/tokens.json` is the single source of truth. Colours, type, spacing,
-radii, glass levels, motion, grain, blob geometry and accessibility constraints
-are defined there and compiled into the app. No widget should contain a
-literal design value.
-
-```sh
-go run ./cmd/designtool verify
-go run ./cmd/designtool contrast
-go run ./cmd/designtool inventory
-go run ./cmd/designtool palette
-```
-
-Contrast is checked in Go, not in the UI: every text colour is validated
-against every surface it can appear on, and the suite fails if any pair falls
-below the configured minimum.
-
-## Storage layout
-
-`db/migrations/` holds numbered, checksummed migrations. A migration is
-verified by hash on every open, so an edited-in-place file is detected rather
-than silently corrupting a device.
-
-## Licence
-
-MIT

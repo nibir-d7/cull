@@ -104,7 +104,8 @@ class CullReport {
     culled: (j['Culled'] as num?)?.toInt() ?? 0,
     total: (j['Total'] as num?)?.toInt() ?? 0,
     cta: j['Cta'] as String? ?? '',
-    proposals: (j['Proposals'] as List?)
+    proposals:
+        (j['Proposals'] as List?)
             ?.map((e) => Proposal.fromJson(e as Map<String, dynamic>))
             .toList() ??
         const [],
@@ -225,14 +226,29 @@ typedef _SchemaDart = int Function(int);
 typedef _FlagNative = Int32 Function(Int32);
 typedef _FlagDart = int Function(int);
 
-typedef _SettingNative = Pointer<Char> Function(Int32, Pointer<Char>, Pointer<Char>);
-typedef _SettingDart = Pointer<Char> Function(int, Pointer<Char>, Pointer<Char>);
+typedef _SettingNative = Pointer<Char> Function(
+  Int32,
+  Pointer<Char>,
+  Pointer<Char>,
+);
+typedef _SettingDart = Pointer<Char> Function(
+  int,
+  Pointer<Char>,
+  Pointer<Char>,
+);
 
-typedef _PairNative = Pointer<Char> Function(Int32, Pointer<Char>, Pointer<Char>);
+typedef _PairNative = Pointer<Char> Function(
+  Int32,
+  Pointer<Char>,
+  Pointer<Char>,
+);
 typedef _PairDart = Pointer<Char> Function(int, Pointer<Char>, Pointer<Char>);
 
 typedef _FreeNative = Void Function(Pointer<Char>);
 typedef _FreeDart = void Function(Pointer<Char>);
+
+typedef _HandleNative = Pointer<Char> Function(Int32);
+typedef _HandleDart = Pointer<Char> Function(int);
 
 List<Link> _links(Object? decoded) => (decoded as List)
     .map((e) => Link.fromJson(e as Map<String, dynamic>))
@@ -293,16 +309,23 @@ class Cull {
     throw UnsupportedError('unsupported platform: ${Platform.operatingSystem}');
   }
 
-  int get week => _lib.lookupFunction<_FlagNative, _FlagDart>('CULLWeek')(_handle);
+  int get week =>
+      _lib.lookupFunction<_FlagNative, _FlagDart>('CULLWeek')(_handle);
 
-  int get schemaVersion =>
-      _lib.lookupFunction<_SchemaNative, _SchemaDart>('CULLSchemaVersion')(_handle);
+  int get schemaVersion => _lib.lookupFunction<_SchemaNative, _SchemaDart>(
+    'CULLSchemaVersion',
+  )(_handle);
 
   bool get hasOnboarded =>
-      _lib.lookupFunction<_FlagNative, _FlagDart>('CULLHasOnboarded')(_handle) == 1;
+      _lib.lookupFunction<_FlagNative, _FlagDart>('CULLHasOnboarded')(
+        _handle,
+      ) ==
+      1;
 
   void markOnboarded() {
-    final fn = _lib.lookupFunction<_StatsNative, _StatsDart>('CULLMarkOnboarded');
+    final fn = _lib.lookupFunction<_StatsNative, _StatsDart>(
+      'CULLMarkOnboarded',
+    );
     _discard(fn(_handle));
   }
 
@@ -310,8 +333,9 @@ class Cull {
       _lib.lookupFunction<_FlagNative, _FlagDart>('CULLIsPro')(_handle) == 1;
 
   String getSetting(String key, {String fallback = ''}) {
-    final fn =
-        _lib.lookupFunction<_SettingNative, _SettingDart>('CULLGetSetting');
+    final fn = _lib.lookupFunction<_SettingNative, _SettingDart>(
+      'CULLGetSetting',
+    );
     final k = key.toNativeUtf8();
     final d = fallback.toNativeUtf8();
     try {
@@ -326,8 +350,7 @@ class Cull {
   }
 
   void setSetting(String key, String value) {
-    final fn =
-        _lib.lookupFunction<_PairNative, _PairDart>('CULLSetSetting');
+    final fn = _lib.lookupFunction<_PairNative, _PairDart>('CULLSetSetting');
     final k = key.toNativeUtf8();
     final v = value.toNativeUtf8();
     try {
@@ -369,7 +392,10 @@ class Cull {
     final fn = _lib.lookupFunction<_SearchNative, _SearchDart>('CULLSearch');
     final q = query.toNativeUtf8();
     try {
-      return _decode<List<Link>>(() => fn(_handle, q.cast<Char>(), limit), _links);
+      return _decode<List<Link>>(
+        () => fn(_handle, q.cast<Char>(), limit),
+        _links,
+      );
     } finally {
       calloc.free(q);
     }
@@ -379,7 +405,10 @@ class Cull {
     final fn = _lib.lookupFunction<_SaveNative, _SaveDart>('CULLSave');
     final u = url.toNativeUtf8();
     try {
-      return _decode<SaveOutcome>(() => fn(_handle, u.cast<Char>(), week), _outcome);
+      return _decode<SaveOutcome>(
+        () => fn(_handle, u.cast<Char>(), week),
+        _outcome,
+      );
     } finally {
       calloc.free(u);
     }
@@ -399,11 +428,32 @@ class Cull {
 
   void restore(String id) => _byId('CULLRestore', id);
 
+  void setCategory(String id, String category) {
+    final fn = _lib.lookupFunction<_PairNative, _PairDart>('CULLSetCategory');
+    final idp = id.toNativeUtf8();
+    final catp = category.toNativeUtf8();
+    try {
+      _discard(fn(_handle, idp.cast<Char>(), catp.cast<Char>()));
+    } finally {
+      calloc.free(idp);
+      calloc.free(catp);
+    }
+  }
+
+  List<String> categories() {
+    final fn = _lib.lookupFunction<_HandleNative, _HandleDart>(
+      'CULLCategories',
+    );
+    return _decode(() => fn(_handle), (o) => (o as List).cast<String>());
+  }
+
   void touchOpen(String id) {
     final fn = _lib.lookupFunction<_StampNative, _StampDart>('CULLTouchOpen');
     final p = id.toNativeUtf8();
     try {
-      _discard(fn(_handle, p.cast<Char>(), DateTime.now().millisecondsSinceEpoch));
+      _discard(
+        fn(_handle, p.cast<Char>(), DateTime.now().millisecondsSinceEpoch),
+      );
     } finally {
       calloc.free(p);
     }
