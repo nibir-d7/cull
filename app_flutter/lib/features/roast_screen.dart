@@ -16,9 +16,56 @@ class RoastScreen extends StatefulWidget {
 
 class _RoastScreenState extends State<RoastScreen> {
   late Future<CullReport> _report = widget.repository.report();
+  bool _culling = false;
 
   void _reload() {
-    setState(() => _report = widget.repository.report());
+    setState(() {
+      _report = widget.repository.report();
+    });
+  }
+
+  Future<void> _cullAll() async {
+    if (_culling) return;
+    setState(() => _culling = true);
+    try {
+      final links = await widget.repository.cullable(limit: 200);
+      for (final link in links) {
+        try {
+          await widget.repository.cull(link.id);
+        } catch (_) {
+          continue;
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _culling = false);
+      _reload();
+    }
+  }
+
+  Future<void> _confirmCullAll() async {
+    final report = await widget.repository.report();
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cull all of them?'),
+        content: Text(
+          '${report.culled} links go to the Graveyard. They stay there for 30 '
+          'days before anything is deleted, so this is reversible.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep them'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(report.cta),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await _cullAll();
   }
 
   @override
@@ -86,26 +133,30 @@ class _RoastScreenState extends State<RoastScreen> {
                 ],
               ),
               const SizedBox(height: CullTokens.spaceLg),
-              if (report.proposals.isEmpty) ...[
-                Text(
-                  'Nothing to propose this week. Either you are reading things, '
-                  'or you saved very little. Both are worth celebrating, briefly.',
-                  style: t.textTheme.bodyLarge,
-                ),
-              ] else ...[
+              if (report.proposals.isNotEmpty) ...[
                 Text('What we are proposing', style: t.textTheme.titleMedium),
                 const SizedBox(height: CullTokens.spaceSm),
                 for (final p in report.proposals)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: CullTokens.spaceMd),
+                    padding: const EdgeInsets.only(
+                      bottom: CullTokens.spaceMd,
+                    ),
                     child: _ProposalCard(proposal: p),
                   ),
-                const SizedBox(height: CullTokens.spaceMd),
-                FilledButton(
-                  onPressed: report.culled == 0 ? null : () {},
-                  child: Text(report.cta),
+              ] else
+                Text(
+                  'Nothing to propose this week, but ${report.culled} link'
+                  '${report.culled == 1 ? '' : 's'} still rot. You can cull them '
+                  'without being told which.',
+                  style: t.textTheme.bodyLarge,
                 ),
-              ],
+              const SizedBox(height: CullTokens.spaceMd),
+              FilledButton(
+                onPressed: report.culled == 0 || _culling
+                    ? null
+                    : _confirmCullAll,
+                child: Text(_culling ? 'Culling' : report.cta),
+              ),
             ],
           );
         },

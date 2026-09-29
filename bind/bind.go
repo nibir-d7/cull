@@ -334,3 +334,7 @@ func isoWeek(t time.Time) int {
 	_, w := t.ISOWeek()
 	return w
 }
+
+func (s *Store) CurrentWeek() int {
+	return isoWeek(time.Now())
+}

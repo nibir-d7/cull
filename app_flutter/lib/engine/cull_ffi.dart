@@ -293,6 +293,8 @@ class Cull {
     throw UnsupportedError('unsupported platform: ${Platform.operatingSystem}');
   }
 
+  int get week => _lib.lookupFunction<_FlagNative, _FlagDart>('CULLWeek')(_handle);
+
   int get schemaVersion =>
       _lib.lookupFunction<_SchemaNative, _SchemaDart>('CULLSchemaVersion')(_handle);
 

@@ -35,6 +35,8 @@ abstract class HoardRepository {
 
   Future<void> setSetting(String key, String value);
 
+  int get week;
+
   int get schemaVersionSync;
 
   void close();
@@ -74,7 +76,7 @@ class EngineHoardRepository implements HoardRepository {
 
   @override
   Future<SaveOutcome> save(String url, {int? week}) async {
-    final outcome = _engine.save(url, week: week ?? currentWeek());
+    final outcome = _engine.save(url, week: week ?? _engine.week);
     if (!outcome.saved && outcome.reason.isNotEmpty) {
       throw EngineException(outcome.reason);
     }
@@ -87,7 +89,7 @@ class EngineHoardRepository implements HoardRepository {
   @override
   Future<CullReport> report({int? tone, int? week}) async => _engine.report(
     tone: tone ?? _engine.tone,
-    week: week ?? currentWeek(),
+    week: week ?? _engine.week,
   );
 
   @override
@@ -123,13 +125,13 @@ class EngineHoardRepository implements HoardRepository {
       _engine.setSetting(key, value);
 
   @override
+  @override
+  int get week => _engine.week;
+
+  @override
   int get schemaVersionSync => _engine.schemaVersion;
 
   @override
   void close() => _engine.close();
 
-  static int currentWeek() {
-    final now = DateTime.now();
-    return (now.difference(DateTime(now.year, 1, 1)).inDays ~/ 7) + 1;
-  }
 }

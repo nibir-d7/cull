@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/hoard_repository.dart';
 import '../design/components.dart';
+import '../design/masonry.dart';
 import '../design/tokens.g.dart';
 import '../engine/cull_ffi.dart';
 
@@ -82,7 +83,7 @@ class LinkCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${link.domain}  ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  ${link.ageDays}d  ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  ${link.bandLabel}',
+                  '${link.domain}  ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  ${link.ageDays}d  ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·  ${link.bandLabel}',
                   style: t.textTheme.labelSmall,
                 ),
               ),
@@ -191,18 +192,18 @@ class _HoardScreenState extends State<HoardScreen> {
                   }
                   return RefreshIndicator(
                     onRefresh: () async => _reload(),
-                    child: ListView.separated(
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(CullTokens.spaceMd),
-                      itemCount: visible.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: CullTokens.spaceSm),
-                      itemBuilder: (context, i) {
-                        final link = visible[i];
-                        return LinkCard(
-                          link: link,
-                          onTap: () => widget.onOpen(link),
-                        );
-                      },
+                      child: MasonryHoard(
+                        itemCount: visible.length,
+                        columns: 2,
+                        heightFor: (_, i) => _cardHeight(visible[i]),
+                        itemBuilder: (context, i) => LinkCard(
+                          link: visible[i],
+                          onTap: () => widget.onOpen(visible[i]),
+                        ),
+                      ),
                     ),
                   );
                 },
@@ -215,6 +216,15 @@ class _HoardScreenState extends State<HoardScreen> {
   }
 
   static String _filterLabel(String v) => v;
+
+  static double _cardHeight(Link link) {
+    var h = 44.0;
+    h += link.title.length > 34 ? 48 : 24;
+    if (link.excerpt.isNotEmpty) h += 8 + 40;
+    h += 8 + 24;
+    h += 8 + 24;
+    return h;
+  }
 }
 
 class _FilterBar extends StatelessWidget {

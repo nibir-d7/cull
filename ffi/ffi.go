@@ -281,6 +281,15 @@ func CULLIsPro(h C.int) C.int {
 	return 0
 }
 
+//export CULLWeek
+func CULLWeek(h C.int) C.int {
+	s := storeAt(h)
+	if s == nil {
+		return 0
+	}
+	return C.int(s.CurrentWeek())
+}
+
 //export CULLSchemaVersion
 func CULLSchemaVersion(h C.int) C.int {
 	s := storeAt(h)

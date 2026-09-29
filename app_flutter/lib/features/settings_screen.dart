@@ -19,6 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late Future<HoardStats> _stats = widget.repository.stats();
   late int _tone = RoastTone.blunt.index;
   bool _loaded = false;
+  bool _culling = false;
 
   @override
   void initState() {
@@ -40,6 +41,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await widget.repository.setTone(tone);
     if (!mounted) return;
     setState(() => _tone = tone);
+  }
+
+  Future<void> _confirmCullEverything() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cull everything?'),
+        content: const Text(
+          'Every link you have saved goes to the Graveyard, then is deleted '
+          'after 30 days. You can restore from the Graveyard until then.\n\n'
+          'This is the app doing what it exists to do.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep them'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Cull it all'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _culling = true);
+    try {
+      final all = await widget.repository.hoard(limit: 5000);
+      for (final link in all) {
+        try {
+          await widget.repository.cull(link.id);
+        } catch (_) {
+          continue;
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _culling = false);
+      setState(() {
+        _stats = widget.repository.stats();
+      });
+    }
   }
 
   @override
@@ -158,9 +200,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: CullTokens.spaceLg),
           OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.delete_sweep_outlined),
-            label: const Text('Cull everything'),
+            onPressed: _culling ? null : _confirmCullEverything,
+            icon: _culling
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: CullTokens.danger,
+                    ),
+                  )
+                : const Icon(Icons.delete_sweep_outlined),
+            label: Text(_culling ? 'Culling' : 'Cull everything'),
           ),
           const SizedBox(height: CullTokens.spaceSm),
           Text(
