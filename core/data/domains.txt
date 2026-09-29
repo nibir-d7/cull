@@ -1,0 +1,109 @@
+# CULL domain map -- one "<domain> <category>" pair per line.
+#
+# Category must be exactly one of:
+#   to-build | tool hoard | productivity porn | inspiration
+#   self-callout | reference | watch later | rotting
+#
+# Matching is by suffix, so "github.com" also matches "gist.github.com".
+# Lines starting with # are comments. Bad categories are skipped, not fatal.
+#
+# This is a seed set. The roadmap calls for growing it from real usage rather
+# than guessing (ROADMAP.md #8) -- add what your install actually hits.
+
+# --- code & docs ---
+github.com            to-build
+gitlab.com            to-build
+codeberg.org          to-build
+sourceforge.net       to-build
+stackoverflow.com     reference
+npmjs.com             to-build
+pypi.org              to-build
+crates.io             to-build
+pkg.go.dev            to-build
+go.dev                to-build
+rust-lang.org         to-build
+python.org            to-build
+nodejs.org            to-build
+developer.mozilla.org reference
+readthedocs.io        to-build
+godoc.org             to-build
+
+# --- docs & learning ---
+docs.python.org        to-build
+developer.apple.com   reference
+developer.android.com  to-build
+tailwindcss.com        to-build
+nextjs.org            to-build
+react.dev             to-build
+vuejs.org             to-build
+svelte.dev            to-build
+flutter.dev           to-build
+dart.dev              to-build
+golang.org            to-build
+
+# --- design & visual ---
+figma.com             reference
+dribbble.com          inspiration
+behance.net           inspiration
+pinterest.com         inspiration
+awwwards.com          inspiration
+are.na                inspiration
+cosmos.so             inspiration
+unsplash.com          inspiration
+mobbin.com            reference
+canva.com             tool hoard
+
+# --- video & media ---
+youtube.com           watch later
+youtu.be              watch later
+vimeo.com             watch later
+twitch.tv             watch later
+netflix.com           watch later
+medium.com            reference
+dev.to                to-build
+hashnode.dev          to-build
+substack.com          reference
+producthunt.com       tool hoard
+
+# --- social (context-dependent; see the social-tool rule) ---
+twitter.com           reference
+x.com                 reference
+threads.net           reference
+bsky.app              reference
+linkedin.com          reference
+instagram.com         inspiration
+facebook.com          reference
+reddit.com            reference
+news.ycombinator.com  reference
+lobste.rs             to-build
+indiehackers.com      inspiration
+
+# --- long-form / news / reference ---
+en.wikipedia.org       reference
+arxiv.org             reference
+bbc.com               reference
+nytimes.com           reference
+theguardian.com       reference
+theverge.com          reference
+arstechnica.com       reference
+lennysnewsletter.com  productivity porn
+fortune.co            reference
+wired.com             reference
+stratechery.com       reference
+
+# --- product discovery & comparison (tool hoard magnets) ---
+betalist.com          tool hoard
+alternativeto.net     tool hoard
+g2.com                tool hoard
+capterra.com          tool hoard
+trends.google.com     tool hoard
+
+# --- self-help & habits: mapped to reference, NOT productivity porn ---
+# The "productivity porn" category is assigned by the CONTENT rule, which
+# requires both low actionability and self-help vocabulary. Mapping a domain
+# straight to "productivity porn" here would be a verdict we cannot justify
+# from the URL alone -- and would fire on the one genuinely useful article
+# a person saved from that domain. Content wins over the map, always.
+zenhabits.net         reference
+morningpages.com      reference
+every.to              inspiration

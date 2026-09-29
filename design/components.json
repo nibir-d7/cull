@@ -1,0 +1,171 @@
+{
+  "_note": "The component inventory. Every component lists the states it must implement; design_test.go fails if one is missing. A 'seriously polished' app is 80% in these states and 20% in the happy path, so the states are the spec, not the afterthought.",
+  "_stateRules": {
+    "interactive": "Every interactive component must implement rest, pressed, focus, disabled. A component missing focus has an accessibility bug, not a gap.",
+    "destructive": "Anything that deletes must be reversible: the state set must include 'undo' at the screen level.",
+    "async": "Anything that loads must implement loading, empty and error, not just the loaded state."
+  },
+
+  "components": [
+    {
+      "id": "GlassCard",
+      "async": false, "destructive": false, "interactive": true,
+      "role": "The base surface. Frosted, 40px radius, soft downward shadow (philosophy 6: glass, grain, gravity).",
+      "states": ["rest", "pressed", "culled", "selected", "focus", "disabled"],
+      "props": ["glassLevel", "radius", "grain", "elevation"],
+      "tokens": ["glass.level1-4", "radius.lg", "grain.opacity", "shadow.shadow_1-4"],
+      "notes": "culled state must dissolve over 260ms, never snap. A deleted card should feel like it settled off the desk."
+    },
+    {
+      "id": "BlobBackground",
+      "async": false, "destructive": false, "interactive": false,
+      "role": "The bruise behind a card. Parametric, animated, respects reduced motion (philosophy 3).",
+      "states": ["rest", "drift", "reduced-motion"],
+      "props": ["variant", "opacity", "animated"],
+      "tokens": ["blob.variants", "color.blob_a-d"],
+      "notes": "Must have a reduced-motion state. An infinitely drifting gradient is exactly the AI-slop motion the design philosophy rejects."
+    },
+    {
+      "id": "ScoreDial",
+      "async": false, "destructive": false, "interactive": false,
+      "role": "HoardScore 0-100 on the guilt ramp. The signature data display.",
+      "states": ["rest", "counting-up", "reduced-motion", "loading", "empty", "error"],
+      "props": ["score", "band", "size", "showExplanation"],
+      "tokens": ["hoardBand.fresh-graveyard", "motion.settle"],
+      "notes": "The number is never shown without its one-line reason. An unexplained score feels arbitrary; an explained one feels like judgement. Must have a screen-reader label reading band and explanation together."
+    },
+    {
+      "id": "MasonryHoard",
+      "async": true,  "destructive": false, "interactive": true,
+      "role": "The home screen. Irregular, overlapping, never a perfect grid (philosophy 3).",
+      "states": ["loading", "empty", "populated", "overflow", "refreshing", "error", "focus", "disabled"],
+      "props": ["columns", "irregularity", "maxItems"],
+      "tokens": ["layout.gridColumns", "layout.grainIrregularity", "type.scale.display-m"],
+      "notes": "empty state copy must be CULL's voice, not 'No bookmarks yet'. Skeleton must be shaped like real content, not a spinner."
+    },
+    {
+      "id": "Pill",
+      "async": false, "destructive": false, "interactive": true,
+      "role": "Category label. Hue is meaning (philosophy 2: a lime pill on charcoal is a signal).",
+      "states": ["rest", "pressed", "locked", "focus", "disabled"],
+      "props": ["category", "variant", "icon"],
+      "tokens": ["category.*", "radius.pill", "type.scale.mono-xs"],
+      "notes": "locked state is the Pro upsell. Hue alone must never carry the category meaning: the label text is always present, and the hue is redundant reinforcement for colour-blind users."
+    },
+    {
+      "id": "PullQuote",
+      "async": false, "destructive": false, "interactive": false,
+      "role": "The roast line as a pull-quote. The app's signature text element (philosophy 4: design references print).",
+      "states": ["rest", "expanded", "focus", "disabled"],
+      "props": ["text", "attribution", "maxWidth"],
+      "tokens": ["type.scale.display-s", "layout.pullQuoteMaxWidth", "color.signal"],
+      "notes": "Measure is capped. An editorial pull-quote that runs the full width of a phone stops being a pull-quote."
+    },
+    {
+      "id": "SwipeCull",
+      "async": true,  "destructive": true,  "interactive": true,
+      "role": "Cull inbox. Swipe to keep or delete, with brutal copy (Product.md).",
+      "states": ["rest", "dragging", "confirm", "undo", "reduced-motion", "focus", "disabled", "loading", "empty", "error"],
+      "props": ["threshold", "onKeep", "onDelete"],
+      "tokens": ["color.success", "color.danger", "motion.settle", "accessibility.minTouchTarget"],
+      "notes": "Destructive: needs hold-to-confirm plus an undo window. MUST have a button alternative for every swipe action -- a swipe-only gesture with no button is an accessibility failure, not a gap. Must announce its state changes to screen readers."
+    },
+    {
+      "id": "RoastCard",
+      "async": true,  "destructive": false, "interactive": true,
+      "role": "The shareable 4:5 PNG. This is the marketing (philosophy 7).",
+      "states": ["loading", "rendering", "ready", "shared", "empty", "error", "focus", "disabled"],
+      "props": ["week", "headline", "proposals", "aspect"],
+      "tokens": ["type.scale.display-xl", "layout.roastCardAspect", "color.canvas_deep"],
+      "notes": "Must be byte-identical for a given week so it can be regenerated. No logo: the design must be identifiable from the screenshot alone. Must be legible in-app too -- if it only makes sense as an image we have built a screenshot generator, not a product."
+    },
+    {
+      "id": "AppButton",
+      "async": false, "destructive": false, "interactive": true,
+      "role": "Every action. Four variants, no Material contained-button hierarchy.",
+      "states": ["rest", "pressed", "focus", "disabled", "loading"],
+      "props": ["variant", "label", "icon", "onTap"],
+      "tokens": ["color.signal", "color.danger", "color.ink_on_accent", "radius.pill", "motion.instant"],
+      "notes": "No elevation levels 1-5 (philosophy 8: no Material). Focus ring is always visible and never removed. loading state must keep the button's width so the layout does not jump."
+    },
+    {
+      "id": "SearchField",
+      "async": true,  "destructive": false, "interactive": true,
+      "role": "FTS5 search as you type, BM25 ranked, highlighted snippets.",
+      "states": ["idle", "focus", "typing", "loading", "results", "empty", "no-results", "error", "disabled"],
+      "props": ["query", "onChanged", "debounce"],
+      "tokens": ["type.scale.mono-s", "color.ink_mono", "motion.instant"],
+      "notes": "No-results must say what was searched for. Must survive hostile input without erroring (see TestSearchSurvivesHostileInput)."
+    },
+    {
+      "id": "ScoreExplanation",
+      "async": false, "destructive": false, "interactive": true,
+      "role": "The one-line reason a score is what it is. Never a bare number.",
+      "states": ["rest", "expanded", "focus", "disabled"],
+      "props": ["explanation", "components"],
+      "tokens": ["type.scale.body-s", "color.ink_tertiary"],
+      "notes": "This is the cheapest intelligence upgrade in the app and the one most likely to be cut under schedule pressure. Do not cut it."
+    }
+  ],
+
+  "screens": [
+    {
+      "id": "Onboarding",
+      "states": ["loading", "intro", "permission", "first-save", "complete", "skipped", "empty", "error"],
+      "requiredCopy": "3 screens maximum. One shows a live roast of the user's own first three saves, because they should feel smart within 30 seconds (Product.md Day 0)."
+    },
+    {
+      "id": "Hoard",
+      "states": ["loading", "empty", "populated", "error", "offline", "refreshing"],
+      "requiredCopy": "Offline is a first-class state: every screen must render from local SQLite with no network."
+    },
+    {
+      "id": "Detail",
+      "states": ["loading", "empty", "ready", "no-screenshot", "partial-extract", "culled", "error"],
+      "requiredCopy": "no-screenshot must show a designed gradient placeholder, not a broken image. Capture will fail often enough to matter."
+    },
+    {
+      "id": "Search",
+      "states": ["loading", "idle", "typing", "results", "empty", "no-results", "error"],
+      "requiredCopy": "no-results names the query."
+    },
+    {
+      "id": "CullInbox",
+      "states": ["loading", "empty", "grouped", "individual", "confirming", "undo", "complete", "error"],
+      "requiredCopy": "empty means the hoard is clean, which deserves a line about that, not silence."
+    },
+    {
+      "id": "Graveyard",
+      "states": ["loading", "empty", "populated", "expiring", "error"],
+      "requiredCopy": "expiring must state the 30-day window, because the Graveyard is a promise."
+    },
+    {
+      "id": "Roast",
+      "states": ["idle", "rendering", "ready", "shared", "empty", "error"],
+      "requiredCopy": "The Day-7 moment. It must work in-app and as a shared image."
+    },
+    {
+      "id": "Forge",
+      "states": ["loading", "idle", "empty", "parsing", "preview", "saved", "error"],
+      "requiredCopy": "preview before saving, always. A project created without confirmation is a project the user did not want."
+    },
+    {
+      "id": "Settings",
+      "states": ["loading", "ready", "tone-picker", "pro-gate", "error"],
+      "requiredCopy": "Savage tone is visibly, obviously locked. That lock is the paywall's marketing."
+    }
+  ],
+
+  "a11yChecklist": [
+    "Every text pair meets WCAG AA (4.5:1 body, 3:1 large) -- enforced by TestContrastAA",
+    "Every interactive target is at least 48dp -- enforced by TestTouchTargetsAreDeclared",
+    "Every motion tier declares a reduced-motion duration -- enforced by TestMotionHasReducedDurations",
+    "Every component with a colour meaning also carries a text label",
+    "Every swipe gesture has a button equivalent",
+    "ScoreDial exposes band and explanation as one screen-reader label",
+    "Focus ring is visible on every interactive element and never removed",
+    "Layout survives 200% text scale without clipping or overlap",
+    "No information is conveyed by colour alone",
+    "Reduced motion removes all blob drift and dial count-up; the value still renders"
+  ]
+}

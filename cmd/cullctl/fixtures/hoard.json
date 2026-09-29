@@ -1,0 +1,149 @@
+[
+  {
+    "url": "https://medium.com/@somebody/10-habits-highly-productive-people",
+    "title": "10 Habits of Highly Productive People",
+    "text": "Ultimate guide to productivity, motivation and mindset. Here is why you should build a morning routine that changes your life. Life hacks for ultimate productivity. The ultimate list of habits that successful people swear by, including a game changer for your daily routine and self improvement habits that actually stick. Your motivation is a skill you can build.",
+    "created_at": "2026-06-30T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 2
+  },
+  {
+    "url": "https://medium.com/@other/why-you-should-wake-up-at-5am",
+    "title": "Why You Should Wake Up at 5AM",
+    "text": "Notes on waking up early. What I learned from five years of morning routines. Life hacks, mindset shifts, motivation, and a daily routine that makes you a better person. Here is why self improvement starts at sunrise. Your ultimate guide to habits and productivity.",
+    "created_at": "2026-05-12T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 1
+  },
+  {
+    "url": "https://medium.com/@third/how-i-built-a-habit-system",
+    "title": "How I Built a Habit System That Stuck",
+    "text": "A year of habit tracking and what I learned. Things I wish I knew about motivation. This is your sign to rethink your morning routine and productivity. Ultimate guide to building habits that survive a busy week. Self improvement is a lifestyle.",
+    "created_at": "2026-03-13T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://medium.com/@fourth/10-ways-to-stop-procrastinating",
+    "title": "10 Ways to Stop Procrastinating Forever",
+    "text": "Procrastination is a mindset problem. Here are 10 ways to fix it, plus a morning routine, life hacks, and the ultimate list of productivity tools. Motivation is what you make it. Build a routine that changes your life.",
+    "created_at": "2026-07-31T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 1
+  },
+  {
+    "url": "https://medium.com/@fifth/the-ultimate-guide-to-doing-less",
+    "title": "The Ultimate Guide To Doing Less",
+    "text": "You are doing it wrong. Doing less is the ultimate productivity hack. Lessons learned from burnout, and why your morning routine is a trap. Self improvement through subtraction. A game changer.",
+    "created_at": "2026-01-12T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://x.com/someone/status/111",
+    "title": "this new AI tool is unreal, everyone needs this app",
+    "text": "Found a tool that does transcription. The plugin is free for a month. Another SaaS that replaces three others. This extension is wild.",
+    "created_at": "2026-03-13T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 3
+  },
+  {
+    "url": "https://x.com/someone/status/222",
+    "title": "10 AI tools you are missing in 2026",
+    "text": "A thread of tools. Every one is a SaaS. Bookmarking the app list for later. This plugin changed my workflow.",
+    "created_at": "2026-01-12T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://x.com/someone/status/333",
+    "title": "notes to self: I keep saying I'll ship this and then not shipping it",
+    "text": "Note to self. I keep saying I will refactor this and then I do not refactor it. I should have done this three months ago. This is why we fail at finishing things.",
+    "created_at": "2026-05-12T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://github.com/spf13/cobra",
+    "title": "spf13/cobra: A CLI library for Go",
+    "text": "A framework for building command line applications. This tutorial walks through how to build a CLI with subcommands, how to install the tool, and how to scaffold a new project. Includes documentation, tests, and a starter you can clone. You will learn how to implement help text, config loading, and error handling by the end.",
+    "created_at": "2026-08-30T00:00:00Z",
+    "open_count": 9,
+    "duplicate_count": 0,
+    "last_opened_at": "2026-09-28T10:00:00Z"
+  },
+  {
+    "url": "https://github.com/charmbracelet/bubbletea",
+    "title": "charmbracelet/bubbletea: TUI framework",
+    "text": "How to build a terminal UI. The architecture, the Elm-style update loop, and how to deploy it. Full documentation and examples you can clone. Implementation guide included.",
+    "created_at": "2026-07-31T00:00:00Z",
+    "open_count": 4,
+    "duplicate_count": 0,
+    "last_opened_at": "2026-09-27T10:00:00Z"
+  },
+  {
+    "url": "https://go.dev/doc/effective_go",
+    "title": "Effective Go",
+    "text": "An essay on Go. Conventions, idioms, and patterns. Includes guidance on error handling, concurrency, and the standard library API. Read this before you build anything.",
+    "created_at": "2026-08-30T00:00:00Z",
+    "open_count": 2,
+    "duplicate_count": 0,
+    "last_opened_at": "2026-09-21T10:00:00Z"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Procrastination",
+    "title": "Procrastination - Wikipedia",
+    "text": "Procrastination is the act of delaying or avoiding a task. Research, causes, and mitigation strategies.",
+    "created_at": "2026-05-12T00:00:00Z",
+    "open_count": 1,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://dribbble.com/shots/moodboard",
+    "title": "Editorial layouts I want to build",
+    "text": "Colour, type, spacing. A moodboard for a magazine redesign.",
+    "created_at": "2026-03-13T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=abcdefghijk",
+    "title": "A 40 minute talk about databases",
+    "text": "Conference talk. Slides available separately.",
+    "created_at": "2026-01-12T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=lmnopqrstuv",
+    "title": "Another talk, saved for the plane",
+    "text": "Saved to watch later. Probably will not watch later.",
+    "created_at": "2026-02-01T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 1
+  },
+  {
+    "url": "https://example.com/a-very-long-article-about-typesetting",
+    "title": "Notes on modern typesetting for screens",
+    "text": "A long-form essay on typography, optical sizing, and how to build a reading experience that people actually finish. Discussion of line length, contrast, and rhythm.",
+    "created_at": "2026-06-01T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://example.com/a-very-long-article-about-typesetting?utm_source=twitter",
+    "title": "Notes on modern typesetting for screens (again)",
+    "text": "A long-form essay on typography, optical sizing, and how to build a reading experience that people actually finish. Discussion of line length, contrast, and rhythm.",
+    "created_at": "2026-08-30T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  },
+  {
+    "url": "https://dev.to/building-a-static-site-generator-in-go-3hjd",
+    "title": "Building a static site generator in Go",
+    "text": "A hands-on tutorial. You will write a parser, a template engine, and a file watcher. Start with markdown, add front matter later. Keep the template layer boring and test the renderer with golden files. Ship it before it is good. Full source code and documentation linked below.",
+    "created_at": "2026-09-20T00:00:00Z",
+    "open_count": 0,
+    "duplicate_count": 0
+  }
+]
