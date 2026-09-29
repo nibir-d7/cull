@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,6 +14,7 @@ import 'features/secondary_screens.dart';
 import 'features/settings_screen.dart';
 import 'onboarding/copy.dart';
 import 'onboarding/onboarding.dart';
+import 'platform/app_paths.dart';
 import 'platform/shared_url.dart';
 
 void main() {
@@ -47,6 +46,7 @@ class EngineGate extends StatefulWidget {
 
 class _EngineGateState extends State<EngineGate> {
   static const SharedUrl _shared = SharedUrl.android();
+  static const AppPaths _paths = AppPaths.android();
   late Future<HoardRepository> _repository;
   bool _onboarded = false;
   int _tone = RoastTone.blunt.index;
@@ -58,10 +58,7 @@ class _EngineGateState extends State<EngineGate> {
   }
 
   Future<HoardRepository> _open() async {
-    const dir = 'data';
-    final repo = await EngineHoardRepository.open(
-      '$dir${Platform.pathSeparator}cull.db',
-    );
+    final repo = await EngineHoardRepository.open(await _paths.databasePath());
     if (repo.hasOnboarded) {
       _onboarded = true;
       _tone = await repo.tone();

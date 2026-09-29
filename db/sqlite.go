@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -34,11 +36,21 @@ type Store struct {
 func Open(path string) (*Store, error) {
 	dsn := path
 	if path != ":memory:" {
+		if dir := filepath.Dir(path); dir != "" && dir != "." {
+			if err := os.MkdirAll(dir, 0o700); err != nil {
+				return nil, fmt.Errorf("db: create %s: %w", dir, err)
+			}
+		}
 		dsn = "file:" + path + "?_pragma=busy_timeout(3000)"
 	}
 
 	s, err := sql.Open("sqlite", dsn)
 	if err != nil {
+		return nil, fmt.Errorf("db: open %s: %w", path, err)
+	}
+
+	if err := s.Ping(); err != nil {
+		s.Close()
 		return nil, fmt.Errorf("db: open %s: %w", path, err)
 	}
 

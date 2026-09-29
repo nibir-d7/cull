@@ -9,7 +9,8 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHARE_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getSharedUrl" -> result.success(pendingUrl)
@@ -17,6 +18,14 @@ class MainActivity : FlutterActivity() {
                         pendingUrl = null
                         result.success(true)
                     }
+                    else -> result.notImplemented()
+                }
+            }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, PATH_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getFilesDir" -> result.success(filesDir.absolutePath)
                     else -> result.notImplemented()
                 }
             }
@@ -44,6 +53,7 @@ class MainActivity : FlutterActivity() {
     }
 
     companion object {
-        private const val CHANNEL = "com.cull.cull/share"
+        private const val SHARE_CHANNEL = "com.cull.cull/share"
+        private const val PATH_CHANNEL = "com.cull.cull/paths"
     }
 }
