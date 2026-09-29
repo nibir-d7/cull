@@ -53,6 +53,24 @@ go build -buildmode=c-shared -o build/cullffi/cull.dll ./ffi
 `ffi/` is a `cgo` package, so it needs a C toolchain. Every other package is
 pure Go and cross-compiles freely.
 
+### Android
+
+Cross-compile the shared library for each ABI before building the app. The
+Android SDK path must not contain spaces.
+
+```sh
+powershell -ExecutionPolicy Bypass -File tool/build-android-libs.ps1
+cd app_flutter && flutter build apk
+```
+
+This writes `libcull.so` for `arm64-v8a`, `armeabi-v7a` and `x86_64` into
+`app_flutter/android/app/src/main/jniLibs/`, which Gradle packages into the APK.
+Set `ANDROID_HOME`, or `ANDROID_NDK_HOME` to pin a specific NDK.
+
+The app starts no network traffic of its own. `android.permission.INTERNET` is
+declared solely so the app can read the page you just shared, and
+`android:allowBackup` is off so the database is never copied to a cloud backup.
+
 ## Build
 
 Requires Go 1.26+ and Flutter 3.47+.

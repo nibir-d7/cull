@@ -45,6 +45,7 @@ app_flutter/.packages
 app_flutter/build/
 app_flutter/android/.gradle/
 app_flutter/android/local.properties
+app_flutter/android/app/src/main/jniLibs/
 app_flutter/android/app/debug/
 app_flutter/android/app/profile/
 app_flutter/android/app/release/
